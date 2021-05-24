@@ -1,3 +1,45 @@
 {
-    "go.inferGopath": false
-}
+	"i18n-ally.localesPaths": "messages",
+	"i18n-ally.keystyle": "nested",
+	"go.inferGopath": false,
+	"python.pythonPath": "/home/ewen/.cache/pypoetry/virtualenvs/translator-7r_3xLEF-py3.9/bin/python",
+	"python.formatting.provider": "black",
+	"python.linting.enabled": false,
+	"githubIssues.queries": [
+		{
+			"label": "Processing",
+			"query": "state:open repo:${owner}/${repository} sort:created-desc label:processing"
+		},
+		{
+			"label": "Server-side configuration",
+			"query": "state:open repo:${owner}/${repository} sort:created-desc label:server"
+		}
+		{
+			"label": "Assets",
+			"query": "state:open repo:${owner}/${repository} sort:created-desc label:assets"
+		},
+		{
+			"label": "HTML Structure",
+			"query": "state:open repo:${owner}/${repository} sort:created-desc label:html"
+		},
+		{
+			"label": "Database (Adding works)",
+			"query": "state:open repo:${owner}/${repository} sort:created-desc label:database"
+		},
+		{
+			"label": "CSS",
+			"query": "state:open repo:${owner}/${repository} sort:created-desc label:styling"
+		},
+		{
+			"label": "SEO",
+			"query": "state:open repo:${owner}/${repository} sort:created-desc label:seo"
+		},
+		{
+			"label": "Shortcuts to external websites",
+			"query": "state:open repo:${owner}/${repository} sort:created-desc label:shortcuts"
+		},
+		{
+			"label": "Analytics",
+			"query": "state:open repo:${owner}/${repository} sort:created-desc label:analytics"
+		}
+	}
