@@ -1,9 +1,10 @@
-package main
+package ortfomk
 
 import (
-	jsoniter "github.com/json-iterator/go"
 	"strings"
 	"unicode"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 // SetJSONNamingStrategy rename struct fields uniformly

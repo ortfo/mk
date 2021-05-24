@@ -1,7 +1,7 @@
 build:
 	go mod tidy
-	go build
+	cd cmd/ortfomk; go build
 
 install:
-	chmod +x mk
-	sudo cp mk ~/.local/bin/ortfomk
+	chmod +x cmd/ortfomk/ortfomk
+	sudo cp cmd/ortfomk/ortfomk ~/.local/bin/ortfomk

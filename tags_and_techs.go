@@ -1,4 +1,4 @@
-package main
+package ortfomk
 
 import (
 	"io/ioutil"

@@ -1,11 +1,11 @@
-package main
+package ortfomk
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/ortfo/db"
+	ortfodb "github.com/ortfo/db"
 )
 
 // LayoutElement represents a work layout element: paragraph, media, link or spacer.

@@ -1,4 +1,4 @@
-package main
+package ortfomk
 
 import (
 	"encoding/hex"
