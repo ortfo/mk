@@ -1,4 +1,4 @@
-module github.com/ewen-lbh/ortfo/mk
+module github.com/ortfo/mk
 
 go 1.14
 
