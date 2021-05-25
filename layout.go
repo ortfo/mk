@@ -81,18 +81,33 @@ func (l LayedOutCell) Type() string {
 
 // CSSGridTemplateAreas returns a css grid-template-areas-compatible string value
 func CSSGridTemplateAreas(layout Layout) (repr string) {
-	// FIXME: each row must have the same number of elements.
-	// eg:
-	// "h1 h1" "p1 p1" "m1 p2" "m1 p3"
-	// instead of "h1" "p1" "m1 p2" "m1 p3"
+	var longestRowLen int
+	for _, row := range layout {
+		if len(row) > longestRowLen {
+			longestRowLen = len(row)
+		}
+	}
 	for _, row := range layout {
 		rowRepr := ""
-		for _, element := range row {
+		for _, element := range repeatToLen(row, longestRowLen) {
 			rowRepr += element.GridArea.String() + " "
 		}
 		repr += fmt.Sprintf("%q ", strings.TrimSpace(rowRepr))
 	}
 	return strings.TrimSpace(repr)
+}
+
+// repeatToLen repeats elements in the given slice until the resulting slice has a length of targetLen.
+// repeatToLen panics if len(s) > targetLen.
+func repeatToLen(s []LayedOutCell, targetLen int) []LayedOutCell {
+	if len(s) > targetLen {
+		panic(fmt.Errorf("given slice is lengthier than targetLen (has length %d > %d)", len(s), targetLen))
+	}
+	// TODO: more intelligent one that distributes elements in an equal fashion. Right now it's just taking the last element
+	for i := len(s); i <= targetLen; i++ {
+		s = append(s, s[0])
+	}
+	return s
 }
 
 func buildLayoutErrorMessage(whatsMissing string, work *WorkOneLang, usedCount int, layout [][]string) string {
