@@ -29,8 +29,8 @@ type Layout [][]LayedOutCell
 
 // GridArea represents the grid area of a cell
 type GridArea struct {
-	Index int
 	Type  string
+	Index int
 }
 
 func (g GridArea) String() string {
