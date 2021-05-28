@@ -94,7 +94,9 @@ func CSSGridTemplateAreas(layout Layout) (repr string) {
 		}
 		repr += fmt.Sprintf("%q ", strings.TrimSpace(rowRepr))
 	}
-	return strings.TrimSpace(repr)
+	// Add row for <h1> (TODO: find a better way to do this)
+	h1repr := strings.ReplaceAll(fmt.Sprintf("%q ", strings.Repeat("h1 ", longestRowLen)), ` "`, `"`)
+	return strings.TrimSpace(h1repr + repr)
 }
 
 // repeatToLen repeats elements in the given slice until the resulting slice has a length of targetLen.
@@ -104,8 +106,8 @@ func repeatToLen(s []LayedOutCell, targetLen int) []LayedOutCell {
 		panic(fmt.Errorf("given slice is lengthier than targetLen (has length %d > %d)", len(s), targetLen))
 	}
 	// TODO: more intelligent one that distributes elements in an equal fashion. Right now it's just taking the last element
-	for i := len(s); i <= targetLen; i++ {
-		s = append(s, s[0])
+	for i := len(s); i < targetLen; i++ {
+		s = append(s, s[len(s)-1])
 	}
 	return s
 }
