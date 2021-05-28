@@ -5,7 +5,7 @@ go:
         - tip
 
 before_install:
-        - sudo apt-get install -y libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+        - sudo apt-get install -y libavcodec-dev libavformat-dev libavutil-dev libswscale-dev ffmpeg
         - go get -t -v ./
 
 script:
