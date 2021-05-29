@@ -6,7 +6,7 @@ go:
 
 before_install:
         - sudo apt-get install -y libavcodec-dev libavformat-dev libavutil-dev libswscale-dev ffmpeg
-        - go get -t -v ./
+        - LC_ALL=C go get -t -v ./
 
 script:
         - go test -race -coverprofile=coverage.txt -covermode=atomic
