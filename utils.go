@@ -84,22 +84,24 @@ func lcm(integers ...int) int {
 	if len(integers) < 2 {
 		return integers[0]
 	}
-	if len(integers) == 2 {
-		greater := integer[0]
-		// choose the greater number
-		if integer[0] > element[1] {
-			greater = integer[0]
-		} else {
-			greater = element[1]
-		}
-
-		for {
-			if (greater%integer[0] == 0) && (greater%element[1] == 0) {
-				return lcm(append(integers[2:], greater)...)
-			}
-			greater += 1
-		}
+	greater := integers[0]
+	// choose the greater number
+	if integers[0] > integers[1] {
+		greater = integers[0]
+	} else {
+		greater = integers[1]
 	}
+
+	for {
+		if (greater%integers[0] == 0) && (greater%integers[1] == 0) {
+			break
+		}
+		greater += 1
+	}
+	if len(integers) == 2 {
+		return greater
+	}
+	return lcm(append(integers[2:], greater)...)
 }
 
 const MaxInt = int(^uint(0) >> 1)
