@@ -3,17 +3,25 @@ package ortfomk
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
-	mapset "github.com/deckarep/golang-set"
 	ortfodb "github.com/ortfo/db"
 )
 
-// LayedOutCell represents a cell of a built layout
-type LayedOutCell struct {
-	GridArea GridArea
+// Cell represents a cell of a layout
+type Cell struct {
+	Type  string
+	Index int
+}
+
+type LayedOutElement struct {
+	// Either media, paragraph, link or spacer.
+	Type string
+	// The positions on the grid. List of [row, cell] pairs.
+	Positions [][]int
 	// Convenience content type, first part of content type except
 	// for application/, where application/pdf becomes pdf and (maybe) others
 	GeneralContentType string
@@ -25,31 +33,52 @@ type LayedOutCell struct {
 	Metadata *WorkMetadata
 }
 
-type Layout [][]LayedOutCell
+type Layout []LayedOutElement
 
-// GridArea represents the grid area of a cell
-type GridArea struct {
-	Type  string
-	Index int
+// CSS returns CSS statements to declare the position of that element in the content grid.
+func (l LayedOutElement) CSS() string {
+	startingColumn := MaxInt
+	startingRow := MaxInt
+	endingColumn := 0
+	endingRow := 0
+
+	// printfln("computing grid position for %s", l)
+	for _, row := range l.Positions {
+		if len(row) != 2 {
+			panic(fmt.Sprintf("A GridArea has an Indices array %#v with a row containing %d != 2 elements", l.Positions, len(row)))
+		}
+		if row[1] < startingColumn {
+			startingColumn = row[1]
+		}
+		if row[0] < startingRow {
+			startingRow = row[0]
+		}
+		if row[1] > endingColumn {
+			endingColumn = row[1]
+		}
+		if row[0] > endingRow {
+			endingRow = row[0]
+		}
+		// printfln("\tgrid-column: %d / %d; grid-row: %d / %d;", startingColumn+1, endingColumn+2, startingRow+1, endingRow+2)
+	}
+
+	return fmt.Sprintf(`grid-column: %d / %d; grid-row: %d / %d;`, startingColumn+1, endingColumn+2, startingRow+1, endingRow+2)
 }
 
-func (g GridArea) String() string {
-	if g.Index == 0 {
-		return g.Type
-	}
-	return fmt.Sprintf("%s%d", g.Type, g.Index)
+func (c Cell) String() string {
+	return fmt.Sprintf("%s[%v]", c.Type, c.Index)
 }
 
 // ID Returns a layed out cell's ID, removing ambiguity
 // (since a cell cannot be two things at the same time, .ID will be .Paragraph.ID for a paragraph, etc.)
-func (l LayedOutCell) ID() string {
-	if l.GridArea.Type == "p" {
+func (l LayedOutElement) ID() string {
+	if l.Type == "paragraph" {
 		return l.Paragraph.ID
 	}
-	if l.GridArea.Type == "m" {
+	if l.Type == "media" {
 		return l.Media.ID
 	}
-	if l.GridArea.Type == "l" {
+	if l.Type == "link" {
 		return l.Link.ID
 	}
 	return ""
@@ -57,59 +86,21 @@ func (l LayedOutCell) ID() string {
 
 // Title Returns a layed out cell's Title, removing ambiguity
 // (since a cell cannot be two things at the same time, .Title will be .Media.Title for a media, etc.)
-func (l LayedOutCell) Title() string {
-	if l.GridArea.Type == "p" {
+func (l LayedOutElement) Title() string {
+	if l.Type == "paragraph" {
 		return ""
 	}
-	if l.GridArea.Type == "m" {
+	if l.Type == "media" {
 		return l.Media.Title
 	}
-	if l.GridArea.Type == "l" {
+	if l.Type == "link" {
 		return l.Link.Title
 	}
 	return ""
 }
 
-func (l LayedOutCell) String() string {
-	return fmt.Sprintf("<%s id=%s index=%d>", l.GridArea.Type, l.ID(), l.GridArea.Index)
-}
-
-// Type is a shortcut to GridArea.Type
-func (l LayedOutCell) Type() string {
-	return l.GridArea.Type
-}
-
-// CSSGridTemplateAreas returns a css grid-template-areas-compatible string value
-func CSSGridTemplateAreas(layout Layout) (repr string) {
-	var longestRowLen int
-	for _, row := range layout {
-		if len(row) > longestRowLen {
-			longestRowLen = len(row)
-		}
-	}
-	for _, row := range layout {
-		rowRepr := ""
-		for _, element := range repeatToLen(row, longestRowLen) {
-			rowRepr += element.GridArea.String() + " "
-		}
-		repr += fmt.Sprintf("%q ", strings.TrimSpace(rowRepr))
-	}
-	// Add row for <h1> (TODO: find a better way to do this)
-	h1repr := strings.ReplaceAll(fmt.Sprintf("%q ", strings.Repeat("h1 ", longestRowLen)), ` "`, `"`)
-	return strings.TrimSpace(h1repr + repr)
-}
-
-// repeatToLen repeats elements in the given slice until the resulting slice has a length of targetLen.
-// repeatToLen panics if len(s) > targetLen.
-func repeatToLen(s []LayedOutCell, targetLen int) []LayedOutCell {
-	if len(s) > targetLen {
-		panic(fmt.Errorf("given slice is lengthier than targetLen (has length %d > %d)", len(s), targetLen))
-	}
-	// TODO: more intelligent one that distributes elements in an equal fashion. Right now it's just taking the last element
-	for i := len(s); i < targetLen; i++ {
-		s = append(s, s[len(s)-1])
-	}
-	return s
+func (l LayedOutElement) String() string {
+	return fmt.Sprintf("<%s %s @ %v>", l.Type, l.ID(), l.Positions)
 }
 
 func buildLayoutErrorMessage(whatsMissing string, work *WorkOneLang, usedCount int, layout [][]string) string {
@@ -122,24 +113,17 @@ func buildLayoutErrorMessage(whatsMissing string, work *WorkOneLang, usedCount i
 	`, whatsMissing, layout, usedCount, whatsMissing)
 }
 
-// CSSGridTemplateAreas returns a css grid-template-areas-compatible string value
-// that represents work.Metadata.Layout
-func (work WorkOneLang) CSSGridTemplateAreas() (value string) {
-	// FIXME: this might be (a bit) computationally expensive
-	return CSSGridTemplateAreas(work.LayedOut())
-}
-
-// ProperLayout turns a an untyped layout from metadata into a [][]string,
+// LayoutHomogeneous turns a an untyped layout from metadata into a [][]string,
 // turning string elements into a one-element slice, so that it can be used
 // in loops without type errors
-func (metadata WorkMetadata) ProperLayout() (proper [][]string, err error) {
+func (metadata WorkMetadata) LayoutHomogeneous() (homo [][]string, err error) {
 	// TODO: also support "direct css grid template areas syntax" where the value of metadata.Layout is a string
 	// that could be returned by .CSSGridTemplateAreas (except for quotes, not required when parsing here.)
 	for _, row := range metadata.Layout {
 		rowType := reflect.TypeOf(row)
 		if rowType.Kind() == reflect.String {
 			// If it is a string, append a 1-element slice
-			proper = append(proper, []string{row.(string)})
+			homo = append(homo, []string{row.(string)})
 		} else if rowType.Kind() == reflect.Array || rowType.Kind() == reflect.Slice {
 			// If it's a slice of strings, append it normally
 			rowString := make([]string, 0)
@@ -151,7 +135,7 @@ func (metadata WorkMetadata) ProperLayout() (proper [][]string, err error) {
 					rowString = append(rowString, fmt.Sprint(element))
 				}
 			}
-			proper = append(proper, rowString)
+			homo = append(homo, rowString)
 		} else {
 			spew.Dump(row, reflect.TypeOf(row))
 			err = fmt.Errorf("%#v is neither a list of string(s) nor a string, it is a %s (%T)", row, rowType.Name(), row)
@@ -161,121 +145,120 @@ func (metadata WorkMetadata) ProperLayout() (proper [][]string, err error) {
 	return
 }
 
-// LayedOut returns an matrix of dimension 2 of LayedOutCells
-// arranaged following the work's 'layout' metadata field
-func (work WorkOneLang) LayedOut() (cells Layout) {
+// LayedOut fills the LayoutIndices of every work content element (paragraphs, mediæ and links.)
+func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 	usedCounts := map[string]int{"p": 0, "m": 0, "l": 0}
-	seenCells := mapset.NewSet()
+	elements := map[string]LayedOutElement{}
 
 	// Coerce the layout into a proper [][]string
-	layoutString, err := work.Metadata.ProperLayout()
+	layoutString, err := work.Metadata.LayoutHomogeneous()
 	if err != nil {
 		panic(err)
 	}
 	// If it's empty, that means the layout was empty all along:
 	// auto-create one.
-	if len(layoutString) == 0 {
-		layoutString = NewLayoutAuto(&work)
+	// TODO ASAP
+	// if len(layoutString) == 0 {
+	// 	layoutString = NewLayoutAuto(&work)
+	// }
+
+	// Determine the width of every row
+	width := 1
+	for _, row := range layoutString {
+		width = lcm(width, len(row))
 	}
 
-	for _, rowString := range layoutString {
-		row := make([]LayedOutCell, 0, len(rowString))
-		for _, cellString := range rowString {
+	for i, rowString := range layoutString {
+		// Guaranteed to be a whole number since width is precisely the lcm of all lengths of rows
+		if len(rowString) == 0 {
+			continue
+		}
+
+		// Repeating with factor repeatCells
+		repeatCells := width / len(rowString)
+
+	cells:
+		for j := 0; j < width; j++ {
+			// printfln("index %d", j/repeatCells)
+			cellString := rowString[j/repeatCells]
+			// printfln("using cell %s ", cellString)
+			if !regexp.MustCompile(`[mlp.](\d+)?`).MatchString(cellString) {
+				return layout, fmt.Errorf("malformed layout cell %q", cellString)
+			}
+			if !regexp.MustCompile(`[mlp.]\d+`).MatchString(cellString) {
+				cellIndex := usedCounts[string(cellString[0])]
+				cellString += fmt.Sprint(cellIndex)
+			}
 			cell, err := ParseStringCell(cellString)
 			if err != nil {
-				panic(err)
+				return layout, fmt.Errorf("while parsing cell %q: %w", cellString, err)
 			}
 
-			if seenCells.Contains(cell.GridArea.String()) {
-				continue
+			for key, element := range elements {
+				// If the element has already been seen, add this position to its positions
+				if key == cell.String() {
+					element.Positions = append(element.Positions, []int{i, j})
+					elements[key] = element
+					continue cells
+				}
 			}
 
-			cell.Metadata = &work.Metadata
-
-			if cell.GridArea.Index == 0 && cell.GridArea.Type != "." {
-				cell.GridArea.Index = usedCounts[cell.GridArea.Type] + 1
-				// Do not increment usedCounts if the index was explicitly stated:
-				// - [p, .]
-				// - p3
-				// - p # <-- would resolve to p3 if usedCounts was incremented in all cases!
-				// TODO: not sure about this behavior, should it resolve to p3? definitely not p4 though.
-				usedCounts[cell.GridArea.Type]++
-			}
-
-			switch cell.GridArea.Type {
+			element := LayedOutElement{Positions: [][]int{{i, j}}, Metadata: &work.Metadata}
+			switch cell.Type {
 			case ".":
-				// nothing left to do, a spacer holds no data
+				element.Type = "spacer"
 			case "p":
-				// to get to index i, the array needs to have at least i+1 elements
-				// to get to index i-1, the array needs to have at least i+1-1=i elements
-				// if it has _strictly less_, panic.
-				if len(work.Paragraphs) < cell.GridArea.Index {
-					panic(buildLayoutErrorMessage("paragraphs", &work, len(work.Paragraphs), layoutString))
+				element.Type = "paragraph"
+				if cell.Index >= len(work.Paragraphs) {
+					return layout, fmt.Errorf(buildLayoutErrorMessage(element.Type, &work, cell.Index, layoutString))
 				}
-				cell.Paragraph = work.Paragraphs[cell.GridArea.Index-1]
+				element.Paragraph = work.Paragraphs[cell.Index]
 			case "l":
-				if len(work.Links) < cell.GridArea.Index {
-					panic(buildLayoutErrorMessage("links", &work, len(work.Links), layoutString))
+				element.Type = "link"
+				if cell.Index >= len(work.Links) {
+					return layout, fmt.Errorf(buildLayoutErrorMessage(element.Type, &work, cell.Index, layoutString))
 				}
-				cell.Link = work.Links[cell.GridArea.Index-1]
+				element.Link = work.Links[cell.Index]
 			case "m":
-				if len(work.Media) < cell.GridArea.Index {
-					panic(buildLayoutErrorMessage("media", &work, len(work.Media), layoutString))
+				element.Type = "media"
+				if cell.Index >= len(work.Media) {
+					return layout, fmt.Errorf(buildLayoutErrorMessage(element.Type, &work, cell.Index, layoutString))
 				}
-				cell.Media = work.Media[cell.GridArea.Index-1]
-				cell.GeneralContentType = strings.Split(cell.Media.ContentType, "/")[0]
-				if cell.Media.ContentType == "application/pdf" {
-					cell.GeneralContentType = "pdf"
-				}
-			default:
-				printfln("\nWARN: While layouting %s: element %s has no Type", work.ID, cellString)
+				element.Media = work.Media[cell.Index]
+				element.GeneralContentType = GeneralContentType(element.Media)
 			}
-			row = append(row, cell)
-			seenCells.Add(cell.GridArea.String())
+			// printfln("%#v", element)
+			elements[cell.String()] = element
+			if j%repeatCells == 0 {
+				usedCounts[cell.Type]++
+			}
+			// printfln("%#v", usedCounts)
 		}
-		cells = append(cells, row)
+	}
+
+	for _, element := range elements {
+		layout = append(layout, element)
 	}
 	return
 }
 
-func NewLayoutAuto(work *WorkOneLang) [][]string {
-	layout := make([][]string, 0)
-	var usedParagraphs, usedLinks, usedMedia int
-	for range work.Paragraphs {
-		usedParagraphs++
-		layout = append(layout, []string{fmt.Sprintf("p%d", usedParagraphs)})
-	}
-	for range work.Media {
-		usedLinks++
-		layout = append(layout, []string{fmt.Sprintf("m%d", usedLinks)})
-	}
-	for range work.Links {
-		usedMedia++
-		layout = append(layout, []string{fmt.Sprintf("l%d", usedMedia)})
-	}
-	return layout
-}
-
-func ParseStringCell(stringCell string) (cell LayedOutCell, err error) {
-	if len(stringCell) > 2 {
-		return cell, fmt.Errorf("malformed layout element %#v: has more than 2 characters", stringCell)
-	}
+func ParseStringCell(stringCell string) (cell Cell, err error) {
 	if len(stringCell) == 1 {
 		if !IsValidCellType(stringCell) {
 			return cell, fmt.Errorf("malformed layout element %#v: unknown cell type", stringCell)
 		}
-		cell.GridArea.Type = stringCell
+		cell.Type = stringCell
 		return
 	}
-	cell.GridArea.Type = stringCell[:1]
-	if !IsValidCellType(cell.GridArea.Type) {
+	cell.Type = stringCell[:1]
+	if !IsValidCellType(cell.Type) {
 		return cell, fmt.Errorf("malformed layout element %#v: unknown cell type", stringCell[:1])
 	}
-	elementIndex, err := strconv.ParseUint(stringCell[1:2], 10, 16)
+	elementIndex, err := strconv.ParseUint(stringCell[1:], 10, 16)
 	if err != nil {
-		return cell, fmt.Errorf("malformed layout element %#v: element index %#v is not an integer", stringCell, stringCell[1:2])
+		return cell, fmt.Errorf("malformed layout element %#v: element index %#v is not an integer", stringCell, stringCell[1:])
 	}
-	cell.GridArea.Index = int(elementIndex)
+	cell.Index = int(elementIndex) - 1
 	return
 }
 

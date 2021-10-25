@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 	"testing"
+	"time"
 
 	"github.com/relvacode/iso8601"
 )
@@ -79,7 +79,32 @@ func printerr(explanation string, err error) {
 	printfln(explanation+": %s", err)
 }
 
-// 
+// lcm returns the least common multiple of all the provided integers
+func lcm(integers ...int) int {
+	if len(integers) < 2 {
+		return integers[0]
+	}
+	if len(integers) == 2 {
+		greater := integer[0]
+		// choose the greater number
+		if integer[0] > element[1] {
+			greater = integer[0]
+		} else {
+			greater = element[1]
+		}
+
+		for {
+			if (greater%integer[0] == 0) && (greater%element[1] == 0) {
+				return lcm(append(integers[2:], greater)...)
+			}
+			greater += 1
+		}
+	}
+}
+
+const MaxInt = int(^uint(0) >> 1)
+
+//
 // Testing utilities (only used in *_test.go)
 //
 

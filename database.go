@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"path"
+	"strings"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -163,4 +164,12 @@ func GetOneLang(lang string, works ...Work) []WorkOneLang {
 		result = append(result, work.InLanguage(lang))
 	}
 	return result
+}
+
+func GeneralContentType(media db.Media) string {
+	mediaGeneralContentType := strings.Split(media.ContentType, "/")[0]
+	if media.ContentType == "application/pdf" {
+		mediaGeneralContentType = "pdf"
+	}
+	return mediaGeneralContentType
 }
