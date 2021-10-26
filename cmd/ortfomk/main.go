@@ -50,5 +50,9 @@ func main() {
 
 		// Final newline
 		println("")
+
+		if len(os.Args) >= 3 && os.Args[1] == "serve" {
+			ortfomk.StartDevServer(8000, os.Args[2])
+		}
 	}
 }
