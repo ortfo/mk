@@ -249,7 +249,9 @@ func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 	}
 
 	for _, element := range elements {
-		layout = append(layout, element)
+		if element.Type != "spacer" {
+			layout = append(layout, element)
+		}
 	}
 	return
 }
