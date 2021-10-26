@@ -4,4 +4,4 @@ build:
 
 install:
 	chmod +x cmd/ortfomk/ortfomk
-	sudo cp cmd/ortfomk/ortfomk ~/.local/bin/ortfomk
+	cp cmd/ortfomk/ortfomk ~/.local/bin/ortfomk
