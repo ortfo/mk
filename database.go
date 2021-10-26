@@ -31,13 +31,14 @@ type Work struct {
 
 // WorkMetadata represents metadata from the metadata field in the database file
 type WorkMetadata struct {
-	Created  string
-	Started  string
-	Finished string
-	Tags     []string
-	Layout   []interface{}
-	MadeWith []string `json:"made with"`
-	Colors   struct {
+	Created      string
+	Started      string
+	Finished     string
+	Tags         []string
+	Layout       []interface{}
+	LayoutProper [][]string // For testing purposes, writing with []interface{}s is cumbersome af.
+	MadeWith     []string   `json:"made with"`
+	Colors       struct {
 		Primary   string
 		Secondary string
 		Tertiary  string

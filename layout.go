@@ -20,6 +20,8 @@ type Cell struct {
 type LayedOutElement struct {
 	// Either media, paragraph, link or spacer.
 	Type string
+	// Index in the layout specification (e.g. 3rd paragraph)
+	LayoutIndex int
 	// The positions on the grid. List of [row, cell] pairs.
 	Positions [][]int
 	// Convenience content type, first part of content type except
@@ -117,6 +119,9 @@ func buildLayoutErrorMessage(whatsMissing string, work *WorkOneLang, usedCount i
 // turning string elements into a one-element slice, so that it can be used
 // in loops without type errors
 func (metadata WorkMetadata) LayoutHomogeneous() (homo [][]string, err error) {
+	if len(metadata.LayoutProper) > 0 {
+		return metadata.LayoutProper, nil
+	}
 	// TODO: also support "direct css grid template areas syntax" where the value of metadata.Layout is a string
 	// that could be returned by .CSSGridTemplateAreas (except for quotes, not required when parsing here.)
 	for _, row := range metadata.Layout {
@@ -169,26 +174,35 @@ func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 	}
 
 	for i, rowString := range layoutString {
-		// Guaranteed to be a whole number since width is precisely the lcm of all lengths of rows
 		if len(rowString) == 0 {
 			continue
 		}
 
 		// Repeating with factor repeatCells
+		// Guaranteed to be a whole number since width is precisely the lcm of all lengths of rows
 		repeatCells := width / len(rowString)
 
-	cells:
-		for j := 0; j < width; j++ {
-			// printfln("index %d", j/repeatCells)
-			cellString := rowString[j/repeatCells]
-			// printfln("using cell %s ", cellString)
+		for j, cellString := range rowString {
+			cellString = strings.Trim(cellString, "[]")
 			if !regexp.MustCompile(`[mlp.](\d+)?`).MatchString(cellString) {
 				return layout, fmt.Errorf("malformed layout cell %q", cellString)
 			}
-			if !regexp.MustCompile(`[mlp.]\d+`).MatchString(cellString) {
-				cellIndex := usedCounts[string(cellString[0])]
-				cellString += fmt.Sprint(cellIndex)
+			if len(cellString) == 1 {
+				rowString[j] = cellString + fmt.Sprint(usedCounts[cellString]+1)
+				usedCounts[cellString[:1]]++
+			} else {
+				newUsedCount, _ := strconv.ParseInt(cellString[2:], 10, 64)
+				usedCounts[cellString[:1]] = int(newUsedCount) + 1
 			}
+		}
+
+	cells:
+		for j := 0; j < width; j++ {
+			cellString := rowString[j/repeatCells]
+			// if !regexp.MustCompile(`[mlp.]\d+`).MatchString(cellString) {
+			// 	cellIndex := usedCounts[string(cellString[0])]
+			// 	cellString += fmt.Sprint(cellIndex)
+			// }
 			cell, err := ParseStringCell(cellString)
 			if err != nil {
 				return layout, fmt.Errorf("while parsing cell %q: %w", cellString, err)
@@ -203,7 +217,8 @@ func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 				}
 			}
 
-			element := LayedOutElement{Positions: [][]int{{i, j}}, Metadata: &work.Metadata}
+			layoutIndex, _ := strconv.ParseInt(cellString[1:], 10, 64)
+			element := LayedOutElement{Positions: [][]int{{i, j}}, LayoutIndex: int(layoutIndex), Metadata: &work.Metadata}
 			switch cell.Type {
 			case ".":
 				element.Type = "spacer"
@@ -229,9 +244,6 @@ func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 			}
 			// printfln("%#v", element)
 			elements[cell.String()] = element
-			if j%repeatCells == 0 {
-				usedCounts[cell.Type]++
-			}
 			// printfln("%#v", usedCounts)
 		}
 	}
@@ -240,6 +252,14 @@ func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 		layout = append(layout, element)
 	}
 	return
+}
+
+func (l Layout) PositionsMap() map[string][][]int {
+	posmap := make(map[string][][]int)
+	for _, element := range l {
+		posmap[fmt.Sprintf("%s%d", element.Type, element.LayoutIndex)] = element.Positions
+	}
+	return posmap
 }
 
 func ParseStringCell(stringCell string) (cell Cell, err error) {
