@@ -57,6 +57,36 @@ func TestWorkOneLangLayedOut(t *testing.T) {
 		val.PositionsMap())
 }
 
+func TestLayoutSorted(t *testing.T) {
+	val, _ := workWithLayout(`p; m1, p; m1, p; p; p; p; l, l; p; m; p, .; p, .; p, .`).LayedOut()
+
+	assert.Equal(t, []string{
+		"paragraph1",
+		"media1",
+		"paragraph2",
+		"paragraph3",
+		"paragraph4",
+		"paragraph5",
+		"paragraph6",
+		"link1",
+		"link2",
+		"paragraph7",
+		"media2",
+		"paragraph8",
+		"paragraph9",
+		"paragraph10",
+	}, layoutCellStrings(val))
+}
+
+// layoutCellStrings maps a Layout to a list of <ElementType><ElementLayoutIndex> strings, e.g. []string{"paragraph1", "media1"}
+func layoutCellStrings(layout Layout) []string {
+	cellStrings := make([]string, 0)
+	for _, element := range layout {
+		cellStrings = append(cellStrings, element.Type+fmt.Sprint(element.LayoutIndex))
+	}
+	return cellStrings
+}
+
 // workWithLayout creates a WorkOneLang, given a textual representation of the layout.
 // It adds enough empty paragraphs/media/links to not run out of elements while laying them out.
 // The textual representation of the layout is a string where "; " separates rows and ", " separates columns:
