@@ -120,6 +120,40 @@ func buildLayoutErrorMessage(whatsMissing string, work *WorkOneLang, usedCount i
 	`, whatsMissing, layout, usedCount, whatsMissing)
 }
 
+// AutoLayout creates a layout from a given work, placing all paragraphs first, then all mediæ, and finally all links.
+// No columns are created
+func AutoLayout(work *WorkOneLang) (layout Layout) {
+	currentPosition := 0
+	for i, paragraph := range work.Paragraphs {
+		layout = append(layout, LayedOutElement{
+			Type: "paragraph",
+			LayoutIndex: i,
+			Positions: [][]int{{currentPosition, 0}},
+			Paragraph: paragraph,
+		})
+		currentPosition++
+	}
+	for i, media := range work.Media {
+		layout = append(layout, LayedOutElement{
+			Type: "media",
+			LayoutIndex: i,
+			Positions: [][]int{{currentPosition, 0}},
+			Media: media,
+		})
+		currentPosition++
+	}
+	for i, link := range work.Links {
+		layout = append(layout, LayedOutElement{
+			Type: "link",
+			LayoutIndex: i,
+			Positions: [][]int{{currentPosition, 0}},
+			Link: link,
+		})
+		currentPosition++
+	}
+	return
+}
+
 // LayoutHomogeneous turns a an untyped layout from metadata into a [][]string,
 // turning string elements into a one-element slice, so that it can be used
 // in loops without type errors
@@ -167,10 +201,9 @@ func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 	}
 	// If it's empty, that means the layout was empty all along:
 	// auto-create one.
-	// TODO ASAP
-	// if len(layoutString) == 0 {
-	// 	layoutString = NewLayoutAuto(&work)
-	// }
+	if len(layoutString) == 0 {
+		return AutoLayout(&work), nil
+	}
 
 	// Determine the width of every row
 	width := 1
