@@ -66,6 +66,13 @@ func LoadWorks(filename string) (works []Work, err error) {
 		return
 	}
 	err = json.Unmarshal(content, &works)
+	// Resolve shortcut "created" for finished + started.
+	for i, work := range works {
+		if work.Metadata.Finished == "" && work.Metadata.Started == "" && work.Metadata.Created != "" {
+			works[i].Metadata.Finished = work.Metadata.Created
+			works[i].Metadata.Started = work.Metadata.Created
+		}
+	}
 	return
 }
 
