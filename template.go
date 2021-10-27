@@ -56,12 +56,14 @@ type TemplateData struct {
 	Age               uint8
 	KnownTags         []Tag
 	KnownTechnologies []Technology
+	KnownSites        []ExternalSite
 	Works             []WorkOneLang
 	MusicTag          Tag
 	// Template data for _-prefixed .pug files: relevant struct instance of what's being hydrated
 	CurrentTag  Tag
 	CurrentTech Technology
 	CurrentWork WorkOneLang
+	CurrentSite ExternalSite
 }
 
 // GetAge returns my age

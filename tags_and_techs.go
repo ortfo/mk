@@ -7,6 +7,14 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// ExternalSite represents an external site (e.g. social media or email address)
+type ExternalSite struct {
+	Name     string `yaml:"name"`
+	URL      string `yaml:"url"`
+	Purpose  string `yaml:"purpose"`
+	Username string `yaml:"username"`
+}
+
 // Tag represents a tag
 type Tag struct {
 	Singular     string   `yaml:"singular"`      // Plural form display name
@@ -49,6 +57,16 @@ func LoadTechnologies(filename string) (technologies []Technology, err error) {
 		return
 	}
 	err = yaml.Unmarshal(raw, &technologies)
+	return
+}
+
+// LoadExternalSites loads the sites from the given yaml file into a []Site
+func LoadExternalSites(filename string) (sites []ExternalSite, err error) {
+	raw, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return
+	}
+	err = yaml.Unmarshal(raw, &sites)
 	return
 }
 

@@ -33,6 +33,8 @@ func (data *GlobalData) BuildAll(in string) (built []string, err error) {
 			built = append(built, data.BuildTagPages(path)...)
 		} else if strings.HasPrefix(entry.Name(), ":technology") {
 			built = append(built, data.BuildTechPages(path)...)
+		} else if strings.HasPrefix(entry.Name(), ":site") {
+			built = append(built, data.BuildSitePages(path)...)
 		} else if strings.HasPrefix(entry.Name(), ":") {
 			return fmt.Errorf("dynamic path %s uses unknown variable %s", path, strings.TrimPrefix(entry.Name(), ":"))
 		} else {
@@ -52,6 +54,19 @@ func (data *GlobalData) BuildTechPages(using string) (built []string) {
 	}
 	for _, tech := range data.Technologies {
 		built = append(built, data.BuildPage(using, templateHTML, &Hydration{tech: tech})...)
+	}
+	return
+}
+
+// BuildSitePages builds all site pages using the template at the given filename
+func (data *GlobalData) BuildSitePages(using string) (built []string) {
+	templateHTML, err := ConvertTemplateIfNeeded(using)
+	if err != nil {
+		printerr("couldn't convert site template", err)
+		return
+	}
+	for _, site := range data.Sites {
+		built = append(built, data.BuildPage(using, templateHTML, &Hydration{site: site})...)
 	}
 	return
 }

@@ -54,6 +54,7 @@ type Database struct {
 	Works        []Work
 	Technologies []Technology
 	Tags         []Tag
+	Sites        []ExternalSite
 }
 
 // LoadWorks reads the database file at filename into a []Work
@@ -86,10 +87,15 @@ func LoadDatabase(databaseDir string) (Database, error) {
 	if err != nil {
 		return Database{}, errors.New("While loading technologies.yaml: " + err.Error())
 	}
+	sites, err := LoadExternalSites(path.Join(databaseDir, "sites.yaml"))
+	if err != nil {
+		return Database{}, errors.New("While loading sites.yaml: " + err.Error())
+	}
 	return Database{
 		Works:        works,
 		Tags:         tags,
 		Technologies: techs,
+		Sites:        sites,
 	}, nil
 }
 

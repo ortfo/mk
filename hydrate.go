@@ -25,6 +25,7 @@ type Hydration struct {
 	tag      Tag
 	tech     Technology
 	work     Work
+	site     ExternalSite
 }
 
 // IsWork returns true if the current hydration contains a Work
@@ -171,11 +172,13 @@ func (data *GlobalData) ExecuteTemplate(tmpl *template.Template, language string
 	err := tmpl.Execute(&buf, TemplateData{
 		KnownTags:         data.Tags,
 		KnownTechnologies: data.Technologies,
+		KnownSites:        data.Sites,
 		Works:             GetOneLang(language, data.Works...),
 		Age:               GetAge(),
 		CurrentTag:        currentlyHydrated.tag,
 		CurrentTech:       currentlyHydrated.tech,
 		CurrentWork:       currentlyHydrated.work.InLanguage(language),
+		CurrentSite:       currentlyHydrated.site,
 	})
 
 	if err != nil {

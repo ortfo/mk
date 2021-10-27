@@ -28,6 +28,9 @@ func (h *Hydration) GetDistFilepath(srcFilepath string) string {
 	if h.tech.URLName != "" {
 		outPath = strings.ReplaceAll(outPath, ":technology", h.tech.URLName)
 	}
+	if h.site.Name != "" {
+		outPath = strings.ReplaceAll(outPath, ":site", h.site.Name)
+	}
 	outPath = strings.ReplaceAll(outPath, ":language", h.language)
 	if strings.HasSuffix(outPath, ".pug") {
 		outPath = strings.TrimSuffix(outPath, ".pug") + ".html"
