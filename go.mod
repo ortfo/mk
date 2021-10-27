@@ -8,6 +8,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/PuerkitoBio/goquery v1.6.1
+	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.7.2
 	github.com/alecthomas/chroma v0.9.1
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2
@@ -32,7 +33,7 @@ require (
 	github.com/radovskyb/watcher v1.0.7
 	github.com/relvacode/iso8601 v1.1.0
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4
 	gitlab.com/opennota/screengen v0.0.0-20210313035852-1f554a814ee7 // indirect
