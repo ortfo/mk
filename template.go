@@ -47,6 +47,7 @@ func GetTemplateFuncMap(language string, data *GlobalData) template.FuncMap {
 		"makeWS":       makeWorkSlice,
 		"appendWS":     appendWorkSlice,
 		"yearsOfWorks": yearsOfWorks,
+		"tnindent":     tnindent,
 	}
 }
 
@@ -137,15 +138,15 @@ func (w WorkOneLang) ThumbnailSource(resolution uint16) string {
 	return media(w.Media[0].Path)
 }
 
-func (c LayedOutCell) ThumbnailSource(resolution uint16) string {
+func (l LayedOutElement) ThumbnailSource(resolution uint16) string {
 	if resolution > 0 {
-		if thumbSource, ok := c.Metadata.Thumbnails[c.Source][resolution]; ok {
+		if thumbSource, ok := l.Metadata.Thumbnails[l.Source][resolution]; ok {
 			// FIXME: media/ shouldn't be hardcoded
 			thumbSource = strings.TrimPrefix(thumbSource, "media/")
 			return media(thumbSource)
 		}
 	}
-	return media(c.Path)
+	return media(l.Path)
 }
 
 func yearsOfWorks(ws []WorkOneLang) []int {
@@ -317,4 +318,9 @@ func makeWorkSlice() []WorkOneLang {
 func appendWorkSlice(toAppend WorkOneLang, ws []WorkOneLang) []WorkOneLang {
 	new := append(ws, toAppend)
 	return new
+}
+
+func tnindent(tabs int, s string) string {
+	pad := strings.Repeat("\t", tabs)
+	return "\n" + pad + strings.ReplaceAll(s, "\n", "\n"+pad)
 }

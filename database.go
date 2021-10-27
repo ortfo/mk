@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"path"
+	"strings"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -30,13 +31,14 @@ type Work struct {
 
 // WorkMetadata represents metadata from the metadata field in the database file
 type WorkMetadata struct {
-	Created  string
-	Started  string
-	Finished string
-	Tags     []string
-	Layout   []interface{}
-	MadeWith []string `json:"made with"`
-	Colors   struct {
+	Created      string
+	Started      string
+	Finished     string
+	Tags         []string
+	Layout       []interface{}
+	LayoutProper [][]string // For testing purposes, writing with []interface{}s is cumbersome af.
+	MadeWith     []string   `json:"made with"`
+	Colors       struct {
 		Primary   string
 		Secondary string
 		Tertiary  string
@@ -163,4 +165,12 @@ func GetOneLang(lang string, works ...Work) []WorkOneLang {
 		result = append(result, work.InLanguage(lang))
 	}
 	return result
+}
+
+func GeneralContentType(media db.Media) string {
+	mediaGeneralContentType := strings.Split(media.ContentType, "/")[0]
+	if media.ContentType == "application/pdf" {
+		mediaGeneralContentType = "pdf"
+	}
+	return mediaGeneralContentType
 }
