@@ -264,6 +264,7 @@ func log(o interface{}) string {
 func asset(assetPath string) string {
 	assetPath = strings.ReplaceAll(assetPath, "#", "sharp")
 	var urlScheme string
+	// TODO: none of this should be hardcoded
 	if !BuildingForProduction() {
 		urlScheme = "file://" + os.Getenv("LOCAL_PROJECTS_DIR") + "portfolio/assets/%s"
 	} else {
@@ -276,8 +277,8 @@ func asset(assetPath string) string {
 func media(mediaPath string) string {
 	mediaPath = strings.ReplaceAll(mediaPath, "#", "sharp")
 	var urlScheme string
+	// TODO: none of this should be hardcoded
 	if !BuildingForProduction() {
-		// FIXME: /media/ shouldn't be hardcoded.
 		urlScheme = "file://" + os.Getenv("LOCAL_PROJECTS_DIR") + "/portfolio/media/%s"
 	} else {
 		urlScheme = "https://media.ewen.works/%s"
