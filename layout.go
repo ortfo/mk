@@ -3,10 +3,8 @@ package ortfomk
 import (
 	"fmt"
 	"reflect"
-	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/davecgh/go-spew/spew"
 	ortfodb "github.com/ortfo/db"
@@ -126,28 +124,28 @@ func AutoLayout(work *WorkOneLang) (layout Layout) {
 	currentPosition := 0
 	for i, paragraph := range work.Paragraphs {
 		layout = append(layout, LayedOutElement{
-			Type: "paragraph",
+			Type:        "paragraph",
 			LayoutIndex: i,
-			Positions: [][]int{{currentPosition, 0}},
-			Paragraph: paragraph,
+			Positions:   [][]int{{currentPosition, 0}},
+			Paragraph:   paragraph,
 		})
 		currentPosition++
 	}
 	for i, media := range work.Media {
 		layout = append(layout, LayedOutElement{
-			Type: "media",
+			Type:        "media",
 			LayoutIndex: i,
-			Positions: [][]int{{currentPosition, 0}},
-			Media: media,
+			Positions:   [][]int{{currentPosition, 0}},
+			Media:       media,
 		})
 		currentPosition++
 	}
 	for i, link := range work.Links {
 		layout = append(layout, LayedOutElement{
-			Type: "link",
+			Type:        "link",
 			LayoutIndex: i,
-			Positions: [][]int{{currentPosition, 0}},
-			Link: link,
+			Positions:   [][]int{{currentPosition, 0}},
+			Link:        link,
 		})
 		currentPosition++
 	}
@@ -191,7 +189,7 @@ func (metadata WorkMetadata) LayoutHomogeneous() (homo [][]string, err error) {
 
 // LayedOut fills the LayoutIndices of every work content element (paragraphs, mediæ and links.)
 func (work WorkOneLang) LayedOut() (layout Layout, err error) {
-	usedCounts := map[string]int{"p": 0, "m": 0, "l": 0}
+	usedCounts := map[string]int{"paragraph": 0, "media": 0, "link": 0}
 	elements := map[string]LayedOutElement{}
 
 	// Coerce the layout into a proper [][]string
@@ -221,16 +219,16 @@ func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 		repeatCells := width / len(rowString)
 
 		for j, cellString := range rowString {
-			cellString = strings.Trim(cellString, "[]")
-			if !regexp.MustCompile(`[mlp.](\d+)?`).MatchString(cellString) {
-				return layout, fmt.Errorf("malformed layout cell %q", cellString)
+			cell, err := ParseStringCell(cellString)
+			if err != nil {
+				return  layout, fmt.Errorf("while parsing layout cell %q: %w", cellString, err)
 			}
-			if len(cellString) == 1 {
-				rowString[j] = cellString + fmt.Sprint(usedCounts[cellString]+1)
-				usedCounts[cellString[:1]]++
+			
+			if cell.Index == -1 {
+				rowString[j] = cellString + fmt.Sprint(usedCounts[cell.Type]+1)
+				usedCounts[cell.Type]++
 			} else {
-				newUsedCount, _ := strconv.ParseInt(cellString[2:], 10, 64)
-				usedCounts[cellString[:1]] = int(newUsedCount) + 1
+				usedCounts[cell.Type] = cell.Index + 1
 			}
 		}
 
@@ -255,25 +253,19 @@ func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 				}
 			}
 
-			layoutIndex, _ := strconv.ParseInt(cellString[1:], 10, 64)
-			element := LayedOutElement{Positions: [][]int{{i, j}}, LayoutIndex: int(layoutIndex), Metadata: &work.Metadata}
+			element := LayedOutElement{Positions: [][]int{{i, j}}, LayoutIndex: cell.Index, Metadata: &work.Metadata, Type: cell.Type}
 			switch cell.Type {
-			case ".":
-				element.Type = "spacer"
-			case "p":
-				element.Type = "paragraph"
+			case "paragraph":
 				if cell.Index >= len(work.Paragraphs) {
 					return layout, fmt.Errorf(buildLayoutErrorMessage(element.Type, &work, cell.Index, layoutString))
 				}
 				element.Paragraph = work.Paragraphs[cell.Index]
-			case "l":
-				element.Type = "link"
+			case "link":
 				if cell.Index >= len(work.Links) {
 					return layout, fmt.Errorf(buildLayoutErrorMessage(element.Type, &work, cell.Index, layoutString))
 				}
 				element.Link = work.Links[cell.Index]
-			case "m":
-				element.Type = "media"
+			case "media":
 				if cell.Index >= len(work.Media) {
 					return layout, fmt.Errorf(buildLayoutErrorMessage(element.Type, &work, cell.Index, layoutString))
 				}
@@ -312,25 +304,29 @@ func (l Layout) PositionsMap() map[string][][]int {
 }
 
 func ParseStringCell(stringCell string) (cell Cell, err error) {
-	if len(stringCell) == 1 {
-		if !IsValidCellType(stringCell) {
-			return cell, fmt.Errorf("malformed layout element %#v: unknown cell type", stringCell)
-		}
-		cell.Type = stringCell
-		return
-	}
-	cell.Type = stringCell[:1]
-	if !IsValidCellType(cell.Type) {
+	switch stringCell[:1] {
+	case "p":
+		cell.Type = "paragraph"
+	case "m":
+		cell.Type = "media"
+	case "l":
+		cell.Type = "link"
+	case ".":
+		cell.Type = "spacer"
+	default:
 		return cell, fmt.Errorf("malformed layout element %#v: unknown cell type", stringCell[:1])
 	}
-	elementIndex, err := strconv.ParseUint(stringCell[1:], 10, 16)
-	if err != nil {
-		return cell, fmt.Errorf("malformed layout element %#v: element index %#v is not an integer", stringCell, stringCell[1:])
+	if len(stringCell) > 1 {
+		elementIndex, err := strconv.ParseUint(stringCell[1:], 10, 16)
+		if err != nil {
+			return cell, fmt.Errorf("malformed layout element %#v: element index %#v is not an integer", stringCell, stringCell[1:])
+		}
+		cell.Index = int(elementIndex) - 1
+		if cell.Index == -1 {
+			return cell, fmt.Errorf("manuall-indexed layout cells cannot start at index 0, start at 1.")
+		}
+	} else {
+		cell.Index = -1
 	}
-	cell.Index = int(elementIndex) - 1
 	return
-}
-
-func IsValidCellType(cellType string) bool {
-	return len(cellType) == 1 && strings.Contains("lmp.", cellType)
 }

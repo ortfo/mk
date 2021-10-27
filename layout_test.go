@@ -27,32 +27,32 @@ func TestWorkOneLangLayedOut(t *testing.T) {
 	val, err := workWithLayout(`p; l, l; m1, p; m1, l; m`).LayedOut()
 	assert.NoError(t, err)
 	assert.Equal(t, map[string][][]int{
-		"paragraph1": {{0, 0}, {0, 1}},
-		"link1":      {{1, 0}},
-		"link2":      {{1, 1}},
-		"media1":     {{2, 0}, {3, 0}},
-		"paragraph2": {{2, 1}},
-		"link3":      {{3, 1}},
-		"media2":     {{4, 0}, {4, 1}},
+		"paragraph0": {{0, 0}, {0, 1}},
+		"link0":      {{1, 0}},
+		"link1":      {{1, 1}},
+		"media0":     {{2, 0}, {3, 0}},
+		"paragraph1": {{2, 1}},
+		"link2":      {{3, 1}},
+		"media1":     {{4, 0}, {4, 1}},
 	}, val.PositionsMap())
 
 	val, err = workWithLayout(`p; m1, p; m1, p; p; p; p; l, l; p; m; p, .; p, .; p, .`).LayedOut()
 	assert.NoError(t, err)
 	assert.Equal(t, map[string][][]int{
-		"paragraph1":  {{0, 0}, {0, 1}},
-		"media1":      {{1, 0}, {2, 0}},
-		"paragraph2":  {{1, 1}},
-		"paragraph3":  {{2, 1}},
-		"paragraph4":  {{3, 0}, {3, 1}},
-		"paragraph5":  {{4, 0}, {4, 1}},
-		"paragraph6":  {{5, 0}, {5, 1}},
-		"link1":       {{6, 0}},
-		"link2":       {{6, 1}},
-		"paragraph7":  {{7, 0}, {7, 1}},
-		"media2":      {{8, 0}, {8, 1}},
-		"paragraph8":  {{9, 0}},
-		"paragraph9":  {{10, 0}},
-		"paragraph10": {{11, 0}},
+		"paragraph0":  {{0, 0}, {0, 1}},
+		"media0":      {{1, 0}, {2, 0}},
+		"paragraph1":  {{1, 1}},
+		"paragraph2":  {{2, 1}},
+		"paragraph3":  {{3, 0}, {3, 1}},
+		"paragraph4":  {{4, 0}, {4, 1}},
+		"paragraph5":  {{5, 0}, {5, 1}},
+		"link0":       {{6, 0}},
+		"link1":       {{6, 1}},
+		"paragraph6":  {{7, 0}, {7, 1}},
+		"media1":      {{8, 0}, {8, 1}},
+		"paragraph7":  {{9, 0}},
+		"paragraph8":  {{10, 0}},
+		"paragraph9": {{11, 0}},
 	},
 		val.PositionsMap())
 }
@@ -61,20 +61,20 @@ func TestLayoutSorted(t *testing.T) {
 	val, _ := workWithLayout(`p; m1, p; m1, p; p; p; p; l, l; p; m; p, .; p, .; p, .`).LayedOut()
 
 	assert.Equal(t, []string{
+		"paragraph0",
+		"media0",
 		"paragraph1",
-		"media1",
 		"paragraph2",
 		"paragraph3",
 		"paragraph4",
 		"paragraph5",
-		"paragraph6",
+		"link0",
 		"link1",
-		"link2",
+		"paragraph6",
+		"media1",
 		"paragraph7",
-		"media2",
 		"paragraph8",
 		"paragraph9",
-		"paragraph10",
 	}, layoutCellStrings(val))
 }
 
