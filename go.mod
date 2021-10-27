@@ -25,6 +25,7 @@ require (
 	github.com/radovskyb/watcher v1.0.7
 	github.com/relvacode/iso8601 v1.1.0
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
+	github.com/stretchr/testify v1.6.1
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
