@@ -10,10 +10,10 @@ import (
 )
 
 func TestLayedOutElementCSS(t *testing.T) {
-	assert.Equal(t, `grid-column: 1 / 2; grid-row: 1 / 2;`, LayedOutElement{Positions: [][]int{{0, 0}}}.CSS())
-	assert.Equal(t, `grid-column: 1 / 2; grid-row: 3 / 8;`, LayedOutElement{Positions: [][]int{{2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}}}.CSS())
-	assert.Equal(t, `grid-column: 4 / 7; grid-row: 4 / 5;`, LayedOutElement{Positions: [][]int{{3, 3}, {3, 4}, {3, 5}}}.CSS())
-	assert.Equal(t, `grid-column: 10 / 14; grid-row: 6 / 9;`, LayedOutElement{Positions: [][]int{{5, 9}, {5, 10}, {5, 11}, {5, 12}, {6, 9}, {6, 10}, {6, 11}, {6, 12}, {7, 9}, {7, 10}, {7, 11}, {7, 12}}}.CSS())
+	assert.Equal(t, `grid-row: 1 / 2; grid-column: 1 / 2;`, LayedOutElement{Positions: [][]int{{0, 0}}}.CSS())
+	assert.Equal(t, `grid-row: 3 / 8; grid-column: 1 / 2;`, LayedOutElement{Positions: [][]int{{2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}}}.CSS())
+	assert.Equal(t, `grid-row: 4 / 5; grid-column: 4 / 7;`, LayedOutElement{Positions: [][]int{{3, 3}, {3, 4}, {3, 5}}}.CSS())
+	assert.Equal(t, `grid-row: 6 / 9; grid-column: 10 / 14;`, LayedOutElement{Positions: [][]int{{5, 9}, {5, 10}, {5, 11}, {5, 12}, {6, 9}, {6, 10}, {6, 11}, {6, 12}, {7, 9}, {7, 10}, {7, 11}, {7, 12}}}.CSS())
 }
 
 func TestWorkMetadataLayoutHomogeneous(t *testing.T) {

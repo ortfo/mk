@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -39,6 +40,12 @@ type Layout []LayedOutElement
 
 // CSS returns CSS statements to declare the position of that element in the content grid.
 func (l LayedOutElement) CSS() string {
+	startingRow, endingRow, startingCol, endingCol := l.PositionBounds()
+	return fmt.Sprintf(`grid-row: %d / %d; grid-column: %d / %d;`, startingRow+1, endingRow+2, startingCol+1, endingCol+2)
+}
+
+// Returns (starting row, ending row, starting column, ending column).
+func (l LayedOutElement) PositionBounds() (int, int, int, int) {
 	startingColumn := MaxInt
 	startingRow := MaxInt
 	endingColumn := 0
@@ -61,10 +68,8 @@ func (l LayedOutElement) CSS() string {
 		if row[0] > endingRow {
 			endingRow = row[0]
 		}
-		// printfln("\tgrid-column: %d / %d; grid-row: %d / %d;", startingColumn+1, endingColumn+2, startingRow+1, endingRow+2)
 	}
-
-	return fmt.Sprintf(`grid-column: %d / %d; grid-row: %d / %d;`, startingColumn+1, endingColumn+2, startingRow+1, endingRow+2)
+	return startingRow, endingRow, startingColumn, endingColumn
 }
 
 func (c Cell) String() string {
@@ -253,6 +258,15 @@ func (work WorkOneLang) LayedOut() (layout Layout, err error) {
 			layout = append(layout, element)
 		}
 	}
+
+	sort.Slice(layout, func(i, j int) bool {
+		// Lexical sort of (starting column, starting row)
+		iCol, _, iRow, _ := layout[i].PositionBounds()
+		jCol, _, jRow, _ := layout[j].PositionBounds()
+
+		return iCol < jCol || (iCol == jCol && iRow < jRow)
+	})
+
 	return
 }
 
