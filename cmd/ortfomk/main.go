@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"strings"
+
 	"github.com/ortfo/mk"
 )
 
@@ -27,7 +29,11 @@ func main() {
 	if err != nil {
 		printerr("Couldn't load the translation files", err)
 	}
-	data := ortfomk.GlobalData{translations, db}
+	data := ortfomk.GlobalData{
+		Translations: translations,
+		Database:     db,
+		HTTPLinks:    make(map[string][]string),
+	}
 	//
 	// Watch mode
 	//
@@ -46,6 +52,31 @@ func main() {
 		err = data.WriteUnusedMsgIds("i18n/unused-msgids.yaml")
 		if err != nil {
 			printerr("While writing unused msgids file", err)
+		}
+
+		// Check for dead links
+		if os.Getenv("DEADLINKS_CHECK") != "0" {
+			printfln("Checking for dead links… (this might take a while, disable it with DEADLINKS_CHECK=0)")
+			noneDead := true
+			for link, sites := range data.HTTPLinks {
+				dead, err := ortfomk.IsLinkDead(link)
+				if err != nil {
+					printerr("could not check for dead links", err)
+				}
+				if !dead {
+					continue
+				}
+
+				noneDead = false
+				printfln("- %s (from %s),", link, strings.Join(sites, ", "))
+
+			}
+
+			if noneDead {
+				printfln("No dead links found.")
+			} else {
+				printfln("are dead links.")
+			}
 		}
 
 		// Final newline

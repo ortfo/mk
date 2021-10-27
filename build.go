@@ -13,6 +13,8 @@ import (
 type GlobalData struct {
 	Translations
 	Database
+	// Maps each link to the pages in which they appear
+	HTTPLinks map[string][]string
 }
 
 // BuildAll builds all page in the given directory, recursively.
@@ -131,11 +133,17 @@ func (data *GlobalData) BuildPage(using string, templateHTML string, hydration *
 			continue
 		}
 		content = data.TranslateHydrated(content, language)
-		fmt.Printf("\r\033[KTranslated %s into %s", hydration.Name(), language)
 		outPath := hydration.GetDistFilepath(using)
+		for _, link_ := range AllLinks(content).ToSlice() {
+			link := link_.(string)
+			if _, exists := data.HTTPLinks[link]; exists {
+				data.HTTPLinks[link] = append(data.HTTPLinks[link], outPath)
+			}
+			data.HTTPLinks[link] = []string{outPath}
+		}
 		os.MkdirAll(filepath.Dir(outPath), 0777)
 		ioutil.WriteFile(outPath, []byte(content), 0777)
-		fmt.Printf("\r\033[KRendered %s as %s", using, outPath)
+		printfln("Rendered %s as %s", using, outPath)
 		built = append(built, outPath)
 	}
 	return

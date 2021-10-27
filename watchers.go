@@ -27,7 +27,11 @@ func StartWatcher(db Database) {
 	w.AddFilterHook(watcher.RegexFilterHook(watchPattern, false))
 
 	translations, err := LoadTranslations()
-	data := GlobalData{translations, db}
+	data := GlobalData{
+		Translations: translations,
+		Database:     db,
+		HTTPLinks:    make(map[string][]string),
+	}
 	if err != nil {
 		printerr("Couldn't load the translation files", err)
 	}
