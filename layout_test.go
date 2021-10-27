@@ -78,6 +78,51 @@ func TestLayoutSorted(t *testing.T) {
 	}, layoutCellStrings(val))
 }
 
+func TestAutoLayout(t *testing.T) {
+	assert.Equal(t, Layout{
+		{
+			Type:        "paragraph",
+			LayoutIndex: 0,
+			Positions:   [][]int{{0, 0}},
+			Paragraph:   ortfodb.Paragraph{ID: "a"},
+		},
+		{
+			Type:        "paragraph",
+			LayoutIndex: 1,
+			Positions:   [][]int{{1, 0}},
+			Paragraph:   ortfodb.Paragraph{ID: "b"},
+		},
+		{
+			Type:        "media",
+			LayoutIndex: 0,
+			Positions:   [][]int{{2, 0}},
+			Media:       ortfodb.Media{ID: "a"},
+		},
+		{
+			Type:        "media",
+			LayoutIndex: 1,
+			Positions:   [][]int{{3, 0}},
+			Media:       ortfodb.Media{ID: "b"},
+		},
+		{
+			Type:        "media",
+			LayoutIndex: 2,
+			Positions:   [][]int{{4, 0}},
+			Media:       ortfodb.Media{ID: "c"},
+		},
+		{
+			Type:        "link",
+			LayoutIndex: 0,
+			Positions:   [][]int{{5, 0}},
+			Link:        ortfodb.Link{ID: "a"},
+		},
+	}, AutoLayout(&WorkOneLang{
+		Paragraphs: []ortfodb.Paragraph{{ID: "a"}, {ID: "b"}},
+		Media:      []ortfodb.Media{{ID: "a"}, {ID: "b"}, {ID: "c"}},
+		Links:      []ortfodb.Link{{ID: "a"}},
+	}))
+}
+
 // layoutCellStrings maps a Layout to a list of <ElementType><ElementLayoutIndex> strings, e.g. []string{"paragraph1", "media1"}
 func layoutCellStrings(layout Layout) []string {
 	cellStrings := make([]string, 0)
