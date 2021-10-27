@@ -142,8 +142,13 @@ func (data *GlobalData) BuildPage(using string, templateHTML string, hydration *
 			data.HTTPLinks[link] = []string{outPath}
 		}
 		os.MkdirAll(filepath.Dir(outPath), 0777)
-		ioutil.WriteFile(outPath, []byte(content), 0777)
-		printfln("Rendered %s as %s", using, outPath)
+		if strings.HasSuffix(outPath, ".pdf") {
+			WritePDF(content, outPath)
+			printfln("Rendered %s as %s (PDF File)", using, outPath)
+		} else {
+			ioutil.WriteFile(outPath, []byte(content), 0777)
+			printfln("Rendered %s as %s", using, outPath)
+		}
 		built = append(built, outPath)
 	}
 	return

@@ -8,6 +8,7 @@ import (
 )
 
 // GetDistFilepath replaces :placeholders in srcFilepath and replaces src/ with dist/
+// It also
 func (h *Hydration) GetDistFilepath(srcFilepath string) string {
 	// Turn into a dist/ path
 	outPath := "dist/" + GetPathRelativeToSrcDir(srcFilepath)
@@ -34,6 +35,11 @@ func (h *Hydration) GetDistFilepath(srcFilepath string) string {
 	outPath = strings.ReplaceAll(outPath, ":language", h.language)
 	if strings.HasSuffix(outPath, ".pug") {
 		outPath = strings.TrimSuffix(outPath, ".pug") + ".html"
+	}
+	// If it's a future .pdf file, remove .html/.pug to keep .pdf alone
+	if regexp.MustCompile(`\.pdf\.(html|pug)$`).MatchString(outPath) {
+		outPath = strings.TrimSuffix(outPath, ".pug")
+		outPath = strings.TrimSuffix(outPath, ".html")
 	}
 	return outPath
 }
