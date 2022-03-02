@@ -8,6 +8,10 @@ import (
 )
 
 func WritePDF(html string, to string) error {
+	Status(StepGeneratePDF, ProgressDetails{
+		File:     g.Progress.File,
+		Language: g.CurrentLanguage,
+	})
 	generator, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		return fmt.Errorf("could not initialize pdf generator: %w", err)

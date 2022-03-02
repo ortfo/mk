@@ -116,15 +116,16 @@ func FixExtendsIncludeStatements(raw []byte, filepath string) []byte {
 
 // PrintTemplateErrorMessage prints a nice error message with a preview of the code where the error occured
 func PrintTemplateErrorMessage(whileDoing string, templateName string, templateContent string, err error, templateLanguage string) {
+	// TODO when error occurs in a subtemplate, show code snippet from the innermost subtemplate instead of the outermost
 	lineIndexPattern := regexp.MustCompile(`:(\d+)`)
 	listIndices := lineIndexPattern.FindStringSubmatch(err.Error())
 	if listIndices == nil {
-		fmt.Printf("While %s %s: %s\n", whileDoing, templateName, err.Error())
+		LogError("While %s %s: %s", whileDoing, templateName, err.Error())
 		return
 	}
 	lineIndex64, _ := strconv.ParseInt(listIndices[1], 10, 64)
 	lineIndex := int(lineIndex64)
-	printfln("While %s %s:%d: %s", whileDoing, templateName, lineIndex, strings.SplitN(err.Error(), listIndices[1], 2)[1])
+	message := fmt.Sprintf("While %s %s:%d: %s\n", whileDoing, templateName, lineIndex, strings.SplitN(err.Error(), listIndices[1], 2)[1])
 	lineIndex-- // Lines start at 1, arrays of line are indexed from 0
 	highlightedWriter := bytes.NewBufferString("")
 	chromaQuick.Highlight(highlightedWriter, gohtml.Format(templateContent), templateLanguage, "terminal16m", "pygments")
@@ -140,20 +141,20 @@ func PrintTemplateErrorMessage(whileDoing string, templateName string, templateC
 	}
 	for i, line := range lines {
 		if i+lineIndexOffset == lineIndex {
-			fmt.Print("→ ")
+			message += "→ "
 		} else {
-			fmt.Print("  ")
+			message += "  "
 		}
-		fmt.Printf("%d", i+1)
-		fmt.Println(line)
+		message += fmt.Sprintf("%d %s\n", i+1, line)
 	}
+	LogError(message)
 }
 
 // ParseTemplate parses a given (HTML) template.
-func (data *GlobalData) ParseTemplate(language string, templateName string, templateContent string) (*template.Template, error) {
+func ParseTemplate(language string, templateName string, templateContent string) (*template.Template, error) {
 	tmpl := template.New(templateName)
 	tmpl = tmpl.Funcs(sprig.TxtFuncMap())
-	tmpl = tmpl.Funcs(GetTemplateFuncMap(language, data))
+	tmpl = tmpl.Funcs(g.Translations.GetTemplateFuncMap(language))
 	tmpl, err := tmpl.Parse(gohtml.Format(templateContent))
 
 	if err != nil {
@@ -163,17 +164,17 @@ func (data *GlobalData) ParseTemplate(language string, templateName string, temp
 }
 
 // ExecuteTemplate executes a parsed HTML template to hydrate it with data, potentially with a tag, tech or work.
-func (data *GlobalData) ExecuteTemplate(tmpl *template.Template, language string, currentlyHydrated Hydration) (string, error) {
+func ExecuteTemplate(tmpl *template.Template, language string, currentlyHydrated Hydration) (string, error) {
 	// Inject Funcs now, since they depend on language
-	tmpl = tmpl.Funcs(GetTemplateFuncMap(language, data))
+	tmpl = tmpl.Funcs(g.Translations.GetTemplateFuncMap(language))
 
 	var buf bytes.Buffer
 
 	err := tmpl.Execute(&buf, TemplateData{
-		KnownTags:         data.Tags,
-		KnownTechnologies: data.Technologies,
-		KnownSites:        data.Sites,
-		Works:             GetOneLang(language, data.Works...),
+		KnownTags:         g.Tags,
+		KnownTechnologies: g.Technologies,
+		KnownSites:        g.Sites,
+		Works:             GetOneLang(language, g.Works...),
 		Age:               GetAge(),
 		CurrentTag:        currentlyHydrated.tag,
 		CurrentTech:       currentlyHydrated.tech,
@@ -189,13 +190,13 @@ func (data *GlobalData) ExecuteTemplate(tmpl *template.Template, language string
 
 // TranslateHydrated translates an hydrated HTML page, removing i18n tags and attributes
 // and replacing translatable content with their translations
-func (data *Translations) TranslateHydrated(content string, language string) string {
+func (t *Translations) TranslateHydrated(content string, language string) string {
 	parsedContent, err := html.Parse(strings.NewReader(content))
 	if err != nil {
-		printerr("An error occured while parsing the hydrated HTML for translation", err)
+		LogError("An error occured while parsing the hydrated HTML for translation: %s", err)
 		return ""
 	}
-	return data.TranslateToLanguage(language == "fr", parsedContent)
+	return t.TranslateToLanguage(language == "fr", parsedContent)
 }
 
 // NameOfTemplate returns the name given to a template that is applied to multiple objects, e.g. :work.pug<portfolio>.
@@ -212,12 +213,12 @@ func (h *Hydration) WriteDistFile(fileName string, content string, language stri
 	distFilePath := h.GetDistFilepath(fileName)
 	distFile, err := os.Create(distFilePath)
 	if err != nil {
-		printerr("Could not create the destination file "+distFilePath, err)
+		LogError("Could not create the destination file "+distFilePath, err)
 		return ""
 	}
 	_, err = distFile.WriteString(content)
 	if err != nil {
-		printerr("Could not write to the destination file "+distFilePath, err)
+		LogError("Could not write to the destination file "+distFilePath, err)
 		return ""
 	}
 	fmt.Printf("\r\033[KWritten %s", distFilePath)

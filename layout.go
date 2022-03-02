@@ -323,7 +323,7 @@ func ParseStringCell(stringCell string) (cell Cell, err error) {
 		}
 		cell.Index = int(elementIndex) - 1
 		if cell.Index == -1 {
-			return cell, fmt.Errorf("manuall-indexed layout cells cannot start at index 0, start at 1.")
+			return cell, fmt.Errorf("manuall-indexed layout cells cannot start at index 0, start at 1")
 		}
 	} else {
 		cell.Index = -1

@@ -91,6 +91,9 @@ func (t *Translations) TranslateToLanguage(french bool, root *html.Node) string 
 
 // LoadTranslations reads from i18n/fr.po to load translations
 func LoadTranslations() (Translations, error) {
+	Status(StepLoadTranslations, ProgressDetails{
+		File: "i18n/fr.po",
+	})
 	poFile, err := po.LoadFile("i18n/fr.po")
 	if err != nil {
 		return Translations{}, err

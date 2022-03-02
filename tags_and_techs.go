@@ -52,6 +52,7 @@ func (t *Technology) ReferredToBy(name string) bool {
 
 // LoadTechnologies loads the technologies from the given yaml file into a []Technology
 func LoadTechnologies(filename string) (technologies []Technology, err error) {
+	Status(StepLoadTechnologies, ProgressDetails{File: filename})
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return
@@ -62,6 +63,7 @@ func LoadTechnologies(filename string) (technologies []Technology, err error) {
 
 // LoadExternalSites loads the sites from the given yaml file into a []Site
 func LoadExternalSites(filename string) (sites []ExternalSite, err error) {
+	Status(StepLoadExternalSites, ProgressDetails{File: filename})
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return
@@ -72,6 +74,7 @@ func LoadExternalSites(filename string) (sites []ExternalSite, err error) {
 
 // LoadTags loads the tags from the given yaml file into a []Tag
 func LoadTags(filename string) (tags []Tag, err error) {
+	Status(StepLoadTags, ProgressDetails{File: filename})
 	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return

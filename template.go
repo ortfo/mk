@@ -13,10 +13,10 @@ import (
 )
 
 // GetTemplateFuncMap returns the funcmap used to hydrate files
-func GetTemplateFuncMap(language string, data *GlobalData) template.FuncMap {
+func (t *Translations) GetTemplateFuncMap(language string) template.FuncMap {
 	return template.FuncMap{
 		// translate translates the given string into `language`
-		"translate": data.TranslateFunction(language),
+		"translate": t.TranslateFunction(language),
 		// "with" filters a []WorkOneLang
 		"withTag":       withTag,
 		"withTech":      withTech,
@@ -39,8 +39,8 @@ func GetTemplateFuncMap(language string, data *GlobalData) template.FuncMap {
 		"asset": asset,
 		"media": media,
 		// lookups for tags & technologies
-		"lookupTag":  func(name string) Tag { return lookupTag(data.Tags, name) },
-		"lookupTech": func(name string) Technology { return lookupTech(data.Technologies, name) },
+		"lookupTag":  func(name string) Tag { return lookupTag(g.Tags, name) },
+		"lookupTech": func(name string) Technology { return lookupTech(g.Technologies, name) },
 		// debugging
 		"log": log,
 		// various

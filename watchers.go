@@ -27,13 +27,13 @@ func StartWatcher(db Database) {
 	w.AddFilterHook(watcher.RegexFilterHook(watchPattern, false))
 
 	translations, err := LoadTranslations()
-	data := GlobalData{
+	SetGlobalData(GlobalData{
 		Translations: translations,
 		Database:     db,
 		HTTPLinks:    make(map[string][]string),
-	}
+	})
 	if err != nil {
-		printerr("Couldn't load the translation files", err)
+		LogError("Couldn't load the translation files: %s", err)
 	}
 	go func() {
 		for {
@@ -48,34 +48,34 @@ func StartWatcher(db Database) {
 					fallthrough
 				case watcher.Write:
 					if strings.HasSuffix(event.Path, ".mo") {
-						printfln("Compiled translations changed: re-building everything")
+						LogInfo("Compiled translations changed: re-building everything")
 						translations, err = LoadTranslations()
 						if err != nil {
-							printerr("Couldn't load the translation files", err)
+							LogError("Couldn't load the translation files: %s", err)
 						}
-						data.BuildAll("src")
+						BuildAll("src")
 					} else if strings.HasSuffix(event.Path, ".pug") {
-						printfln("Building file %s and its dependents %v", GetPathRelativeToSrcDir(event.Path), dependents)
+						LogInfo("Building file %s and its dependents %v", GetPathRelativeToSrcDir(event.Path), dependents)
 						for _, filePath := range append(dependents, event.Path) {
 							if strings.Contains(filePath, ":work") {
-								data.BuildWorkPages(filePath)
+								BuildWorkPages(filePath)
 							} else if strings.Contains(filePath, ":tag") {
-								data.BuildTagPages(filePath)
+								BuildTagPages(filePath)
 							} else if strings.Contains(filePath, ":technology") {
-								data.BuildTechPages(filePath)
+								BuildTechPages(filePath)
 							} else {
-								data.BuildRegularPage(filePath)
+								BuildRegularPage(filePath)
 							}
 						}
-						data.SavePO("i18n/fr.po")
+						g.Translations.SavePO("i18n/fr.po")
 					}
 				case watcher.Remove:
 					if len(dependents) > 0 {
-						printfln("WARN: Files %s depended on %s, which was removed", strings.Join(dependents, ", "), event.Path)
+						LogWarning("Files %s depended on %s, which was removed", strings.Join(dependents, ", "), event.Path)
 					}
 				case watcher.Rename:
 					if GetPathRelativeToSrcDir(event.OldPath) == "gallery.pug" {
-						printfln("WARN: gallery.pug was renamed, exiting: you'll need to update references to the filename in Go files.")
+						LogWarning("gallery.pug was renamed, exiting: you'll need to update references to the filename in Go files.")
 						w.Close()
 					}
 					if len(dependents) > 0 {
@@ -87,7 +87,7 @@ func StartWatcher(db Database) {
 				}
 				fmt.Println("\r\033[K")
 			case err := <-w.Error:
-				printerr("An errror occured while watching changes in src/", err)
+				LogError("An errror occured while watching changes in src/: %s", err)
 			case <-w.Closed:
 				return
 			}
@@ -95,15 +95,15 @@ func StartWatcher(db Database) {
 	}()
 
 	if err := w.AddRecursive("src"); err != nil {
-		printerr("Couldn't add src/ to watcher", err)
+		LogError("Couldn't add src/ to watcher: %s", err)
 	}
 
 	if err := w.AddRecursive("i18n"); err != nil {
-		printerr("Couldn't add i18n/ to watcher", err)
+		LogError("Couldn't add i18n/ to watcher: %s", err)
 	}
 
 	if err := w.Start(100 * time.Millisecond); err != nil {
-		printerr("Couldn't start the watcher", err)
+		LogError("Couldn't start the watcher: %s", err)
 	}
 
 }
@@ -113,17 +113,17 @@ func UpdateExtendsStatement(in string, from string, to string) {
 	extendsPattern := regexp.MustCompile(`(?m)^extends\s+(?:src/)?` + from + `(?:\.pug)?\s*$`)
 	file, err := os.Open(in)
 	if err != nil {
-		printerr(fmt.Sprintf("While updating the extends statement in %s from %s to %s: could not open file %s", in, from, to, in), err)
+		LogError(fmt.Sprintf("While updating the extends statement in %s from %s to %s: could not open file %s", in, from, to, in), err)
 	}
 	contents, err := os.ReadFile(in)
 	if err != nil {
-		printerr(fmt.Sprintf("While updating the extends statement in %s from %s to %s: could not read file %s", in, from, to, in), err)
+		LogError(fmt.Sprintf("While updating the extends statement in %s from %s to %s: could not read file %s", in, from, to, in), err)
 	}
 	_, err = file.Write(
 		extendsPattern.ReplaceAll(contents, []byte("extends "+to)),
 	)
 	if err != nil {
-		printerr(fmt.Sprintf("While updating the extends statement in %s from %s to %s: could not write to file %s", in, from, to, in), err)
+		LogError(fmt.Sprintf("While updating the extends statement in %s from %s to %s: could not write to file %s", in, from, to, in), err)
 	}
 }
 
@@ -149,7 +149,7 @@ func DependentsOf(pageFilepath string, maxDepth uint) (dependents []string) {
 			content, err := os.ReadFile(path)
 
 			if err != nil {
-				printerr("Not checking for dependence on "+pageFilepath+": could not read file "+path, err)
+				LogError("Not checking for dependence on "+pageFilepath+": could not read file "+path, err)
 				return nil
 			}
 
@@ -164,7 +164,7 @@ func DependentsOf(pageFilepath string, maxDepth uint) (dependents []string) {
 				if maxDepth > 1 {
 					dependents = append(dependents, DependentsOf(path, maxDepth-1)...)
 				} else {
-					printfln("WARN: While looking for dependents for %s: Maximum recursion depth reached, not recursing any further. You might have a circular depency.", GetPathRelativeToSrcDir(pageFilepath))
+					LogWarning("While looking for dependents for %s: Maximum recursion depth reached, not recursing any further. You might have a circular dependency.", GetPathRelativeToSrcDir(pageFilepath))
 				}
 			}
 		}
@@ -172,7 +172,7 @@ func DependentsOf(pageFilepath string, maxDepth uint) (dependents []string) {
 	})
 
 	if err != nil {
-		printerr("While looking for dependents on "+GetPathRelativeToSrcDir(pageFilepath), err)
+		LogError("While looking for dependents on "+GetPathRelativeToSrcDir(pageFilepath), err)
 	}
 	return
 }

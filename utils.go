@@ -3,7 +3,6 @@ package ortfomk
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -71,20 +70,16 @@ func StringsLooselyMatch(s1 string, sn ...string) bool {
 	return false
 }
 
-func printfln(text string, a ...interface{}) {
-	fmt.Printf(text+"\n", a...)
-}
-
-func printerr(explanation string, err error) {
-	printfln(explanation+": %s", err)
-}
+// func printfln(text string, a ...interface{}) {
+// 	fmt.Printf(text+"\n", a...)
+// }
 
 // lcm returns the least common multiple of all the provided integers
 func lcm(integers ...int) int {
 	if len(integers) < 2 {
 		return integers[0]
 	}
-	greater := integers[0]
+	var greater int
 	// choose the greater number
 	if integers[0] > integers[1] {
 		greater = integers[0]

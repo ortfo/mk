@@ -59,6 +59,9 @@ type Database struct {
 
 // LoadWorks reads the database file at filename into a []Work
 func LoadWorks(filename string) (works []Work, err error) {
+	Status(StepLoadWorks, ProgressDetails{
+		File: filename,
+	})
 	json := jsoniter.ConfigFastest
 	SetJSONNamingStrategy(LowerCaseWithUnderscores)
 	content, err := ioutil.ReadFile(filename)
@@ -116,7 +119,7 @@ func (work *WorkOneLang) Created() time.Time {
 	}
 	parsedDate, err := ParseCreationDate(creationDate)
 	if err != nil {
-		printfln("Error while parsing creation date of %v:", work.ID)
+		LogError("Error while parsing creation date of %v:", work.ID)
 		panic(err)
 	}
 	return parsedDate
