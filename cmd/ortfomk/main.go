@@ -23,7 +23,6 @@ Arguments:
 Options:
 	--write-progress=<filepath>   Write current build progress to <filepath>
 	--silent                      Don't output progress status to console
-	--
 
 Build Progress:
   For integration purposes, the current build progress can be written to a file.
