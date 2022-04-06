@@ -175,7 +175,6 @@ func ExecuteTemplate(tmpl *template.Template, language string, currentlyHydrated
 		KnownTechnologies: g.Technologies,
 		KnownSites:        g.Sites,
 		Works:             GetOneLang(language, g.Works...),
-		Age:               GetAge(),
 		CurrentTag:        currentlyHydrated.tag,
 		CurrentTech:       currentlyHydrated.tech,
 		CurrentWork:       currentlyHydrated.work.InLanguage(language),

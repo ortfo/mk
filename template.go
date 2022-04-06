@@ -66,12 +66,6 @@ type TemplateData struct {
 	CurrentSite ExternalSite
 }
 
-// GetAge returns my age
-func GetAge() uint8 {
-	// TODO Do it dynamically
-	return 17
-}
-
 // TranslateFunction returns a function that calls gettext to translate a string to the given language
 func (t *Translations) TranslateFunction(language string) func(string) string {
 	if language == "fr" {
