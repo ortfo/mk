@@ -27,3 +27,6 @@
 
 # Environment variables
 .env
+
+cmd/ortfomk/ortfomk
+
