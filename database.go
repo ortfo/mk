@@ -75,6 +75,19 @@ func LoadWorks(filename string) (works []Work, err error) {
 			works[i].Metadata.Finished = work.Metadata.Created
 			works[i].Metadata.Started = work.Metadata.Created
 		}
+		// Set arrays and objects to empty instead of leaving them nil.
+		if work.Metadata.Layout == nil {
+			works[i].Metadata.Layout = make([]interface{}, 0)
+		}
+		if work.Metadata.Tags == nil {
+			works[i].Metadata.Tags = []string{}
+		}
+		if work.Metadata.MadeWith == nil {
+			works[i].Metadata.MadeWith = []string{}
+		}
+		if work.Metadata.Thumbnails == nil {
+			works[i].Metadata.Thumbnails = make(map[string]map[uint16]string)
+		}
 	}
 	return
 }
