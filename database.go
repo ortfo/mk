@@ -20,7 +20,7 @@ type WorkOneLang struct {
 	Paragraphs []db.Paragraph
 	Media      []db.Media
 	Links      []db.Link
-	Footnotes  []db.Footnote
+	Footnotes  db.Footnotes
 	Language   string
 }
 
@@ -149,7 +149,7 @@ func (work Work) InLanguage(lang string) WorkOneLang {
 	var paragraphs []db.Paragraph
 	var media []db.Media
 	var links []db.Link
-	var footnotes []db.Footnote
+	var footnotes db.Footnotes
 	if len(work.Title[lang]) > 0 {
 		title = work.Title[lang]
 	} else {
