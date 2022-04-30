@@ -147,7 +147,7 @@ func PrintTemplateErrorMessage(whileDoing string, templateName string, templateC
 		} else {
 			message += "  "
 		}
-		message += fmt.Sprintf("%d %s\n", i+1, line)
+		message += fmt.Sprintf("%d %s\n", lineIndexOffset+i+1, line)
 	}
 	LogError(message)
 }
