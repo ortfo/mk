@@ -85,9 +85,11 @@ func ConvertTemplate(absFilepath string) (string, error) {
 		return "", err
 	}
 
-	raw = FixExtendsIncludeStatements(raw, absFilepath)
+	// raw = FixExtendsIncludeStatements(raw, absFilepath)
 
 	template, err := jade.Parse(absFilepath, raw)
+	template = strings.ReplaceAll(template, "&#34;", "\"")
+
 	if err != nil {
 		PrintTemplateErrorMessage("converting template to HTML", absFilepath, string(raw), err, "pug")
 		return "", fmt.Errorf("error while converting to HTML")
