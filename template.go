@@ -48,6 +48,12 @@ func (t *Translations) GetTemplateFuncMap(language string) template.FuncMap {
 		"appendWS":     appendWorkSlice,
 		"yearsOfWorks": yearsOfWorks,
 		"tnindent":     tnindent,
+		"entriesStringString": func(m map[string]string) []struct {
+			Key   string
+			Value string
+		} {
+			return entries(m)
+		},
 	}
 }
 
@@ -127,8 +133,10 @@ func (w WorkOneLang) ThumbnailSource(resolution uint16) string {
 			// FIXME: media/ shouldn't be hardcoded
 			// Could be implemented by reading .portfolioortfodb.yaml
 			// Therefore there should be a config file common to ortfo{db,mk}, just put .ortfo.yaml in the portfolio's root.
-			thumbSource = strings.TrimPrefix(thumbSource, "media/")
+			thumbSource = strings.TrimPrefix(thumbSource, "dist/media/")
 			return media(thumbSource)
+		} else {
+			fmt.Printf("Thumbnail not found. Available: %v, Asked: %v\n", keys(w.Metadata.Thumbnails[w.Media[0].Path]), resolution)
 		}
 	}
 	return media(w.Media[0].Path)
@@ -136,10 +144,12 @@ func (w WorkOneLang) ThumbnailSource(resolution uint16) string {
 
 func (l LayedOutElement) ThumbnailSource(resolution uint16) string {
 	if resolution > 0 {
-		if thumbSource, ok := l.Metadata.Thumbnails[l.Source][resolution]; ok {
+		if thumbSource, ok := l.Metadata.Thumbnails[l.Path][resolution]; ok {
 			// FIXME: media/ shouldn't be hardcoded
-			thumbSource = strings.TrimPrefix(thumbSource, "media/")
+			thumbSource = strings.TrimPrefix(thumbSource, "dist/media/")
 			return media(thumbSource)
+		} else {
+			fmt.Printf("Thumbnail not found. Available: %v, Asked: %v\n", keys(l.Metadata.Thumbnails), l.Path)
 		}
 	}
 	return media(l.Path)
@@ -319,4 +329,22 @@ func appendWorkSlice(toAppend WorkOneLang, ws []WorkOneLang) []WorkOneLang {
 func tnindent(tabs int, s string) string {
 	pad := strings.Repeat("\t", tabs)
 	return "\n" + pad + strings.ReplaceAll(s, "\n", "\n"+pad)
+}
+
+func entries[K comparable, V any](m map[K]V) []struct {
+	Key   K
+	Value V
+} {
+	entries := make([]struct {
+		Key   K
+		Value V
+	}, 0)
+
+	for k, v := range m {
+		entries = append(entries, struct {
+			Key   K
+			Value V
+		}{k, v})
+	}
+	return entries
 }
