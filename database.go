@@ -63,7 +63,7 @@ func LoadWorks(filename string) (works []Work, err error) {
 		File: filename,
 	})
 	json := jsoniter.ConfigFastest
-	SetJSONNamingStrategy(LowerCaseWithUnderscores)
+	SetJSONNamingStrategy(json, LowerCaseWithUnderscores)
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return

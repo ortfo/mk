@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ortfo/db/configuration",
+  "properties": {
+    "extract colors": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "extract": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "default files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "additionalproperties": false,
+      "type": "object",
+      "required": [
+        "enabled",
+        "extract",
+        "default files"
+      ]
+    },
+    "make gifs": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "file name template": {
+          "type": "string"
+        }
+      },
+      "additionalproperties": false,
+      "type": "object",
+      "required": [
+        "enabled",
+        "file name template"
+      ]
+    },
+    "make thumbnails": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "sizes": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "input file": {
+          "type": "string"
+        },
+        "file name template": {
+          "type": "string"
+        }
+      },
+      "additionalproperties": false,
+      "type": "object",
+      "required": [
+        "enabled",
+        "sizes",
+        "input file",
+        "file name template"
+      ]
+    },
+    "build metadata file": {
+      "type": "string"
+    },
+    "media": {
+      "properties": {
+        "at": {
+          "type": "string"
+        }
+      },
+      "additionalproperties": false,
+      "type": "object",
+      "required": [
+        "at"
+      ]
+    },
+    "scattered mode folder": {
+      "type": "string"
+    }
+  },
+  "additionalproperties": false,
+  "type": "object",
+  "required": [
+    "extract colors",
+    "make gifs",
+    "make thumbnails",
+    "build metadata file",
+    "media",
+    "scattered mode folder"
+  ]
+}

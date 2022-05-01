@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "items": {
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "metadata": {
+        "type": "object"
+      },
+      "title": {
+        "patternproperties": {
+          ".*": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "paragraphs": {
+        "patternproperties": {
+          ".*": {
+            "items": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalproperties": false,
+              "type": "object",
+              "required": [
+                "id",
+                "content"
+              ]
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "media": {
+        "patternproperties": {
+          ".*": {
+            "items": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "alt": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "contenttype": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer"
+                },
+                "dimensions": {
+                  "properties": {
+                    "width": {
+                      "type": "integer"
+                    },
+                    "height": {
+                      "type": "integer"
+                    },
+                    "aspectratio": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalproperties": false,
+                  "type": "object",
+                  "required": [
+                    "width",
+                    "height",
+                    "aspectratio"
+                  ]
+                },
+                "duration": {
+                  "type": "integer"
+                },
+                "online": {
+                  "type": "boolean"
+                },
+                "attributes": {
+                  "properties": {
+                    "looped": {
+                      "type": "boolean"
+                    },
+                    "autoplay": {
+                      "type": "boolean"
+                    },
+                    "muted": {
+                      "type": "boolean"
+                    },
+                    "playsinline": {
+                      "type": "boolean"
+                    },
+                    "controls": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalproperties": false,
+                  "type": "object",
+                  "required": [
+                    "looped",
+                    "autoplay",
+                    "muted",
+                    "playsinline",
+                    "controls"
+                  ]
+                },
+                "hassound": {
+                  "type": "boolean"
+                }
+              },
+              "additionalproperties": false,
+              "type": "object",
+              "required": [
+                "id",
+                "alt",
+                "title",
+                "source",
+                "path",
+                "contenttype",
+                "size",
+                "dimensions",
+                "duration",
+                "online",
+                "attributes",
+                "hassound"
+              ]
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "links": {
+        "patternproperties": {
+          ".*": {
+            "items": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              },
+              "additionalproperties": false,
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "title",
+                "url"
+              ]
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "footnotes": {
+        "patternproperties": {
+          ".*": {
+            "patternproperties": {
+              ".*": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "additionalproperties": false,
+    "type": "object",
+    "required": [
+      "id",
+      "metadata",
+      "title",
+      "paragraphs",
+      "media",
+      "links",
+      "footnotes"
+    ]
+  },
+  "type": "array"
+}

@@ -8,8 +8,8 @@ import (
 )
 
 // SetJSONNamingStrategy rename struct fields uniformly
-func SetJSONNamingStrategy(translate func(string) string) {
-	jsoniter.RegisterExtension(&namingStrategyExtension{jsoniter.DummyExtension{}, translate})
+func SetJSONNamingStrategy(decoder jsoniter.API, translate func(string) string) {
+	decoder.RegisterExtension(&namingStrategyExtension{jsoniter.DummyExtension{}, translate})
 }
 
 type namingStrategyExtension struct {

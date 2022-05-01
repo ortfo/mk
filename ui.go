@@ -82,6 +82,8 @@ func UpdateSpinner() {
 		message = fmt.Sprintf("Loading translations from [magenta]%s[reset]", g.Progress.File)
 	case StepLoadWorks:
 		message = fmt.Sprintf("Loading works from database [magenta]%s[reset]", g.Progress.File)
+	default:
+		message = string(g.Progress.Step)
 	}
 	var currentObjectType = ""
 	if strings.Contains(g.Progress.File, ":work") {
@@ -114,13 +116,17 @@ func LogInfo(message string, fmtArgs ...interface{}) {
 	spinner.Unpause()
 }
 
+var lastDebugTimestamp time.Time = time.Now()
+
 // LogDebug logs debug messages.
 func LogDebug(message string, fmtArgs ...interface{}) {
 	if os.Getenv("DEBUG") != "1" {
 		return
 	}
 	spinner.Pause()
-	colorstring.Fprintf(os.Stderr, "\033[2K\r[magenta]debug[reset] [bold][dim](%s)[reset] %s\n", currentWorkID, fmt.Sprintf(message, fmtArgs...))
+	duration := time.Since(lastDebugTimestamp)
+	colorstring.Fprintf(os.Stderr, "\033[2K\r[magenta]debug[reset] [bold][dim](%s) %s[reset] %s\n", currentWorkID, duration.String(), fmt.Sprintf(message, fmtArgs...))
+	lastDebugTimestamp = time.Now()
 	spinner.Unpause()
 }
 

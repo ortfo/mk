@@ -15,15 +15,17 @@ import (
 	"golang.org/x/net/html"
 )
 
-// Translations holds both the gettext catalog from the .mo file
+// TranslationsOneLang holds both the gettext catalog from the .mo file
 // and a po file object used to update the .po file (e.g. when discovering new translatable strings)
-type Translations struct {
+type TranslationsOneLang struct {
 	poFile          po.File
 	seenMsgIds      mapset.Set
 	missingMessages []po.Message
+	language        string
 }
 
-func (t *Translations) WriteUnusedMsgIds(to string) error {
+func (t TranslationsOneLang) WriteUnusedMsgIds() error {
+	to := fmt.Sprintf("i18n/%s.po", t.language)
 	ioutil.WriteFile(to, []byte("# Generated at "+time.Now().String()+"\n"), 0644)
 	file, err := os.OpenFile(to, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -55,7 +57,7 @@ func getLanguageName(french bool) string {
 }
 
 // TranslateToLanguage translates the given html node to french or english, removing translation-related attributes
-func (t *Translations) TranslateToLanguage(french bool, root *html.Node) string {
+func (t *TranslationsOneLang) TranslateToLanguage(french bool, root *html.Node) string {
 	// Open files
 	doc := goquery.NewDocumentFromNode(root)
 	doc.Find("i18n, [i18n]").Each(func(_ int, element *goquery.Selection) {
@@ -91,24 +93,31 @@ func (t *Translations) TranslateToLanguage(french bool, root *html.Node) string 
 
 // LoadTranslations reads from i18n/fr.po to load translations
 func LoadTranslations() (Translations, error) {
-	Status(StepLoadTranslations, ProgressDetails{
-		File: "i18n/fr.po",
-	})
-	poFile, err := po.LoadFile("i18n/fr.po")
-	if err != nil {
-		return Translations{}, err
-	}
+	translations := make(Translations)
+	for _, languageCode := range []string{"fr", "en"} {
+		translationsFilepath := fmt.Sprintf("i18n/%s.po", languageCode)
+		Status(StepLoadTranslations, ProgressDetails{
+			File: translationsFilepath,
+		})
+		poFile, err := po.LoadFile(translationsFilepath)
+		if err != nil {
+			fmt.Printf("Couldn't load translations for %s (%s): %s\n", languageCode, translationsFilepath, err.Error())
+			poFile = &po.File{}
+		}
 
-	return Translations{
-		poFile:          *poFile,
-		seenMsgIds:      mapset.NewSet(),
-		missingMessages: make([]po.Message, 0),
-	}, nil
+		translations[languageCode] = TranslationsOneLang{
+			poFile:          *poFile,
+			seenMsgIds:      mapset.NewSet(),
+			missingMessages: make([]po.Message, 0),
+			language:        languageCode,
+		}
+	}
+	return translations, nil
 }
 
 // SavePO writes the .po file to the disk, with its potential modifications
 // It removes duplicate msgids beforehand
-func (t *Translations) SavePO(path string) {
+func (t TranslationsOneLang) SavePO() {
 	// TODO: sort file after saving, (po.File).Save is not stable... (creates unecessary diffs in git)
 	t.poFile.Messages = append(t.poFile.Messages, t.missingMessages...)
 	dedupedMessages := make([]po.Message, 0)
@@ -136,7 +145,7 @@ func (t *Translations) SavePO(path string) {
 	t.poFile.Messages = uselessRemoved
 	// Sort them to guarantee a stable write
 	sort.Sort(ByMsgId(t.poFile.Messages))
-	t.poFile.Save(path)
+	t.poFile.Save(fmt.Sprintf("i18n/%s.po", t.language))
 }
 
 // ByMsgId implement sorting gettext messages by their msgid
@@ -156,7 +165,7 @@ func (b ByMsgId) Swap(i, j int) {
 
 // GetTranslation returns the msgstr corresponding to msgid from the .po file
 // If not found, it returns the empty string
-func (t *Translations) GetTranslation(msgid string) string {
+func (t *TranslationsOneLang) GetTranslation(msgid string) string {
 	t.seenMsgIds.Add(msgid)
 	for _, message := range t.poFile.Messages {
 		if message.MsgId == msgid && message.MsgStr != "" {
