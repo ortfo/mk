@@ -273,7 +273,7 @@ func BuildPage(pageName string, compiledTemplate []byte, hydration *Hydration) (
 			LogError("couldn't execute template: %s", err)
 			continue
 		}
-		content = g.Translations[language].TranslateHydrated(content, language)
+		content = g.Translations[language].TranslateHydrated(content)
 		for _, link_ := range AllLinks(content).ToSlice() {
 			link := link_.(string)
 			if _, exists := g.HTTPLinks[link]; exists {

@@ -136,13 +136,13 @@ func RunTemplate(hydration *Hydration, templateName string, compiledTemplate []b
 
 // TranslateHydrated translates an hydrated HTML page, removing i18n tags and attributes
 // and replacing translatable content with their translations
-func (t TranslationsOneLang) TranslateHydrated(content string, language string) string {
+func (t TranslationsOneLang) TranslateHydrated(content string) string {
 	parsedContent, err := html.Parse(strings.NewReader(content))
 	if err != nil {
 		LogError("An error occured while parsing the hydrated HTML for translation: %s", err)
 		return ""
 	}
-	return t.TranslateToLanguage(language == "fr", parsedContent)
+	return t.Translate(parsedContent)
 }
 
 // NameOfTemplate returns the name given to a template that is applied to multiple objects, e.g. :work.pug<portfolio>.

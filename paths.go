@@ -3,15 +3,16 @@ package ortfomk
 import (
 	"bytes"
 	"html/template"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
 
 // GetDistFilepath replaces :placeholders in srcFilepath and replaces src/ with dist/
-// It also
+// It also adds the language subdirectory to the path (files are rendered to dist/{{language}}/...)
 func (h *Hydration) GetDistFilepath(srcFilepath string) string {
 	// Turn into a dist/ path
-	outPath := "dist/" + GetPathRelativeToSrcDir(srcFilepath)
+	outPath := filepath.Join("dist", GetPathRelativeToSrcDir(srcFilepath))
 	// Replace stuff
 	if h.work.ID != "" {
 		outPath = strings.ReplaceAll(outPath, ":work.created", h.work.Metadata.Created)

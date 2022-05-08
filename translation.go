@@ -15,6 +15,8 @@ import (
 	"golang.org/x/net/html"
 )
 
+const SourceLanguage = "en"
+
 // TranslationsOneLang holds both the gettext catalog from the .mo file
 // and a po file object used to update the .po file (e.g. when discovering new translatable strings)
 type TranslationsOneLang struct {
@@ -25,7 +27,7 @@ type TranslationsOneLang struct {
 }
 
 func (t TranslationsOneLang) WriteUnusedMsgIds() error {
-	to := fmt.Sprintf("i18n/%s.po", t.language)
+	to := fmt.Sprintf("i18n/%s-unused-msgids.yaml", t.language)
 	ioutil.WriteFile(to, []byte("# Generated at "+time.Now().String()+"\n"), 0644)
 	file, err := os.OpenFile(to, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -42,29 +44,15 @@ func (t TranslationsOneLang) WriteUnusedMsgIds() error {
 	return nil
 }
 
-func getLanguageCode(french bool) string {
-	if french {
-		return "fr"
-	}
-	return "en"
-}
-
-func getLanguageName(french bool) string {
-	if french {
-		return "Français"
-	}
-	return "English"
-}
-
 // TranslateToLanguage translates the given html node to french or english, removing translation-related attributes
-func (t *TranslationsOneLang) TranslateToLanguage(french bool, root *html.Node) string {
+func (t *TranslationsOneLang) Translate(root *html.Node) string {
 	// Open files
 	doc := goquery.NewDocumentFromNode(root)
 	doc.Find("i18n, [i18n]").Each(func(_ int, element *goquery.Selection) {
 		element.RemoveAttr("i18n")
 		msgContext, _ := element.Attr("i18n-context")
 		element.RemoveAttr("i18n-context")
-		if french {
+		if t.language != SourceLanguage {
 			innerHTML, _ := element.Html()
 			innerHTML = html.UnescapeString(innerHTML)
 			innerHTML = strings.TrimSpace(innerHTML)
@@ -84,10 +72,6 @@ func (t *TranslationsOneLang) TranslateToLanguage(french bool, root *html.Node) 
 	htmlString, _ := doc.Html()
 	htmlString = strings.ReplaceAll(htmlString, "<i18n>", "")
 	htmlString = strings.ReplaceAll(htmlString, "</i18n>", "")
-	htmlString = strings.ReplaceAll(htmlString, "[# LANGUAGE CODE #]", getLanguageCode(french))
-	htmlString = strings.ReplaceAll(htmlString, "[# LANGUAGE NAME #]", getLanguageName(french))
-	htmlString = strings.ReplaceAll(htmlString, "[# OTHER LANGUAGE CODE #]", getLanguageCode(!french))
-	htmlString = strings.ReplaceAll(htmlString, "[# OTHER LANGUAGE NAME #]", getLanguageName(!french))
 	return gohtml.Format(htmlString)
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/docopt/docopt-go"
 	ortfomk "github.com/ortfo/mk"
@@ -52,6 +53,7 @@ func main() {
 	progressFilePath, _ := args.String("--write-progress")
 	outputDirectory, _ := args.String("<destination>")
 	templatesDirectory, _ := args.String("<templates>")
+	templatesDirectory, _ = filepath.Abs(templatesDirectory)
 	flags := ortfomk.Flags{
 		Silent:       isSilent,
 		ProgressFile: progressFilePath,
@@ -92,6 +94,11 @@ func main() {
 	// Watch mode
 	//
 	if val, _ := args.Bool("develop"); val {
+		_, err := ortfomk.BuildAll(templatesDirectory)
+		if err != nil {
+			ortfomk.LogError("During initial build: %s", err)
+		}
+
 		ortfomk.StartWatcher(db)
 	} else {
 		_, err := ortfomk.BuildAll(templatesDirectory)
@@ -100,12 +107,14 @@ func main() {
 			ortfomk.LogError("While building: %s", err)
 		}
 
-		// Save the updated .po file
-		translations.SavePO("i18n/fr.po")
-		// Save list of unused msgids
-		err = translations.WriteUnusedMsgIds("i18n/unused-msgids.yaml")
-		if err != nil {
-			ortfomk.LogError("While writing unused msgids file: %s", err)
+		for _, lang := range []string{"fr", "en"} {
+			// Save the updated .po file
+			translations[lang].SavePO()
+			// Save list of unused msgids
+			err = translations[lang].WriteUnusedMsgIds()
+			if err != nil {
+				ortfomk.LogError("While writing unused msgids file: %s", err)
+			}
 		}
 
 		// Check for dead links
