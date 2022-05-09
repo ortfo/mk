@@ -156,7 +156,11 @@ func NameOfTemplate(name string, hydration Hydration) string {
 
 // WriteDistFile writes the given content to the dist/ equivalent of the given fileName and returns that equivalent's path
 func (h *Hydration) WriteDistFile(fileName string, content string, language string) string {
-	distFilePath := h.GetDistFilepath(fileName)
+	distFilePath, err := h.GetDistFilepath(fileName)
+	if err != nil {
+		LogError("Invalid path: %s", err)
+		return ""
+	}
 	distFile, err := os.Create(distFilePath)
 	if err != nil {
 		LogError("Could not create the destination file "+distFilePath, err)

@@ -29,6 +29,12 @@ type Work struct {
 	Metadata WorkMetadata
 }
 
+// String returns a string representation of the work.
+// This is used to construct output paths (and therefore future URLs).
+func (work Work) String() string {
+	return work.ID
+}
+
 // WorkMetadata represents metadata from the metadata field in the database file
 type WorkMetadata struct {
 	Created      string

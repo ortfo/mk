@@ -15,6 +15,12 @@ type ExternalSite struct {
 	Username string `yaml:"username"`
 }
 
+// String returns the string representation of the external site.
+// Should be the one used in URLs, as GetDistFilepath uses this.
+func (s ExternalSite) String() string {
+	return s.Name
+}
+
 // Tag represents a tag
 type Tag struct {
 	Singular     string   `yaml:"singular"`      // Plural form display name
@@ -22,6 +28,12 @@ type Tag struct {
 	Aliases      []string `yaml:"aliases"`       // Works with a tag name in this array will be considered as tagged by the Tag
 	Description  string   `yaml:"description"`   // A description of what works that have this tag are.
 	LearnMoreURL string   `yaml:"learn more at"` // A URL to a page where more about that tag can be learnt
+}
+
+// String returns the string representation of the tag.
+// Should be the one used in URLs, as GetDistFilepath uses this.
+func (t Tag) String() string {
+	return t.URLName()
 }
 
 // Technology represents something that a work was made with
@@ -33,6 +45,12 @@ type Technology struct {
 	Author       string   `yaml:"by"`            // What company is behind the tech? (to display i.e. 'Adobe Photoshop' instead of 'Photoshop')
 	LearnMoreURL string   `yaml:"learn more at"` // The technology's website
 	Description  string   `yaml:"description"`   // A short description of the technology
+}
+
+// String returns the string representation of the technology.
+// Should be the one used in URLs, as GetDistFilepath uses this.
+func (t Technology) String() string {
+	return t.URLName
 }
 
 // URLName computes the identifier to use in the tag's page's URL

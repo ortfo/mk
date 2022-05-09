@@ -6,10 +6,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
+
+	exprVM "github.com/antonmedv/expr/vm"
 )
 
 var g GlobalData = GlobalData{}
+var DynamicPathExpressionsCahe = map[string]*exprVM.Program{}
 
 type Translations map[string]TranslationsOneLang
 
@@ -71,6 +75,7 @@ func ComputeTotalToBuildCount() {
 	g.Progress.Total = ToBuildTotalCount(g.TemplatesDirectory)
 }
 
+// FIXME
 func ToBuildTotalCount(in string) (count int) {
 	err := filepath.WalkDir(in, func(path string, entry fs.DirEntry, err error) error {
 		if strings.Contains(path, "/mixins/") {
@@ -83,35 +88,32 @@ func ToBuildTotalCount(in string) (count int) {
 			return err
 		}
 		LogDebug("walking into %s", path)
-		if strings.HasPrefix(entry.Name(), ":work") || strings.HasPrefix(entry.Name(), ":if(work") {
-			incrementBy := len(g.Works) * len([]string{"fr", "en"})
-			LogDebug("incrementing total tobuild count[:tag]: %d + %d -> %d", incrementBy, count, count+incrementBy)
-			count += incrementBy
-		} else if strings.HasPrefix(entry.Name(), ":tag") {
-			incrementBy := len(g.Tags) * len([]string{"fr", "en"})
-			LogDebug("incrementing total tobuild count[:work]: %d + %d -> %d", incrementBy, count, count+incrementBy)
-			count += incrementBy
-		} else if strings.HasPrefix(entry.Name(), ":technology") {
-			incrementBy := len(g.Technologies) * len([]string{"fr", "en"})
-			LogDebug("incrementing total tobuild count[:technology]: %d + %d -> %d", incrementBy, count, count+incrementBy)
-			count += incrementBy
-		} else if strings.HasPrefix(entry.Name(), ":site") {
-			incrementBy := len(g.Sites) * len([]string{"fr", "en"})
-			LogDebug("incrementing total tobuild count[:site]: %d + %d -> %d", incrementBy, count, count+incrementBy)
-			count += incrementBy
-		} else if strings.HasPrefix(entry.Name(), ":") {
-			return nil
-		} else {
-			incrementBy := 1 * len([]string{"fr", "en"})
-			LogDebug("incrementing total tobuild count: %d + %d -> %d", incrementBy, count, count+incrementBy)
-			count += incrementBy
+		countForPath := 1
+		for _, expression := range DynamicPathExpressions(path) {
+			switch expression {
+			case "work":
+				countForPath *= len(g.Works)
+			case "tag":
+				countForPath *= len(g.Tags)
+			case "technology":
+			case "tech":
+				countForPath *= len(g.Technologies)
+			case "site":
+				countForPath *= len(g.Sites)
+			default:
+				if regexp.MustCompile(`^language\s+is\s+.+$`).MatchString(expression) {
+					countForPath *= 1 // bruh moment
+				} else if expression == "language" {
+					countForPath *= len([]string{"fr", "en"})
+				}
+			}
 		}
-		return err
+		count += countForPath
+		return nil
 	})
 	if err != nil {
 		LogError("couldn't count the total number of pages to build: %s", err)
 	}
-
 	return
 }
 
@@ -256,7 +258,15 @@ func BuildRegularPage(filepath string) (built []string) {
 func BuildPage(pageName string, compiledTemplate []byte, hydration *Hydration) (built []string) {
 	for _, language := range []string{"fr", "en"} {
 		hydration.language = language
-		outPath := hydration.GetDistFilepath(pageName)
+		outPath, err := hydration.GetDistFilepath(pageName)
+		if err != nil {
+			LogError("Invalid path: %s", err)
+			continue
+		}
+		if outPath == "" {
+			LogDebug("Skipped path %s", pageName)
+			continue
+		}
 
 		Status(StepBuildPage, ProgressDetails{
 			File:     pageName,
