@@ -8,7 +8,6 @@ require (
 	github.com/alecthomas/chroma v0.10.0
 	github.com/chai2010/gettext-go v1.0.2
 	github.com/davecgh/go-spew v1.1.1
-	github.com/deckarep/golang-set v1.8.0
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/invopop/jsonschema v0.4.0
 	github.com/joho/godotenv v1.4.0
@@ -31,6 +30,8 @@ require (
 	github.com/JohannesKaufmann/html-to-markdown v1.3.3 // indirect
 	github.com/anaskhan96/soup v1.2.5 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
+	github.com/antonmedv/expr v1.9.0
+	github.com/deckarep/golang-set v1.8.0
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
