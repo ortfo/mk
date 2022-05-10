@@ -152,7 +152,6 @@ func BuildAll(in string) (built []string, err error) {
 
 // BuildTechPages builds all technology pages using `using`
 func BuildTechPages(using string) (built []string) {
-	SetCurrentObjectID(using)
 	templateContent, err := os.ReadFile(using)
 	if err != nil {
 		LogError("couldn't read the template: %s", err)
@@ -174,7 +173,6 @@ func BuildTechPages(using string) (built []string) {
 
 // BuildSitePages builds all site pages using the template at the given filename
 func BuildSitePages(using string) (built []string) {
-	SetCurrentObjectID(using)
 	templateContent, err := os.ReadFile(using)
 	if err != nil {
 		LogError("couldn't read the template: %s", err)
@@ -196,7 +194,6 @@ func BuildSitePages(using string) (built []string) {
 
 // BuildTagPages builds all tag pages using the given filename
 func BuildTagPages(using string) (built []string) {
-	SetCurrentObjectID(using)
 	templateContent, err := os.ReadFile(using)
 	if err != nil {
 		LogError("couldn't read the template: %s", err)
@@ -218,7 +215,6 @@ func BuildTagPages(using string) (built []string) {
 
 // BuildWorkPages builds all work pages using the given filepath
 func BuildWorkPages(using string) (built []string) {
-	SetCurrentObjectID(using)
 	templateContent, err := os.ReadFile(using)
 	if err != nil {
 		LogError("coudln't read template: %s", err)
@@ -239,21 +235,22 @@ func BuildWorkPages(using string) (built []string) {
 
 // BuildRegularPage builds a given page that isn't dynamic (i.e. does not require object data,
 // as opposed to work, tag and tech pages)
-func BuildRegularPage(filepath string) (built []string) {
-	templateContent, err := os.ReadFile(filepath)
+func BuildRegularPage(path string) (built []string) {
+	SetCurrentObjectID(strings.TrimSuffix(filepath.Base(g.Progress.File), filepath.Ext(g.Progress.File)))
+	templateContent, err := os.ReadFile(path)
 	if err != nil {
 		LogError("couldn't read the template: %s", err)
 		return
 	}
 
-	compiledTemplate, err := CompileTemplate(filepath, templateContent)
+	compiledTemplate, err := CompileTemplate(path, templateContent)
 	if err != nil {
 		LogError("could not build the page’s template: %s", err)
 		return
 	}
 	LogDebug("finished compiling")
 
-	return BuildPage(filepath, compiledTemplate, &Hydration{})
+	return BuildPage(path, compiledTemplate, &Hydration{})
 }
 
 // BuildPage builds a single page
