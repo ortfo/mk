@@ -75,7 +75,6 @@ func ComputeTotalToBuildCount() {
 	g.Progress.Total = ToBuildTotalCount(g.TemplatesDirectory)
 }
 
-// FIXME
 func ToBuildTotalCount(in string) (count int) {
 	err := filepath.WalkDir(in, func(path string, entry fs.DirEntry, err error) error {
 		if strings.Contains(path, "/mixins/") {
@@ -90,25 +89,28 @@ func ToBuildTotalCount(in string) (count int) {
 		LogDebug("walking into %s", path)
 		countForPath := 1
 		for _, expression := range DynamicPathExpressions(path) {
+			LogDebug("Adding expression %s to count", expression)
 			switch expression {
 			case "work":
 				countForPath *= len(g.Works)
 			case "tag":
 				countForPath *= len(g.Tags)
 			case "technology":
+				fallthrough
 			case "tech":
 				countForPath *= len(g.Technologies)
 			case "site":
 				countForPath *= len(g.Sites)
 			default:
-				if regexp.MustCompile(`^language\s+is\s+.+$`).MatchString(expression) {
+				if regexp.MustCompile(`^lang(uage)?\s+is\s+.+$`).MatchString(expression) {
 					countForPath *= 1 // bruh moment
-				} else if expression == "language" {
+				} else if expression == "language" || expression == "lang" {
 					countForPath *= len([]string{"fr", "en"})
 				}
 			}
 		}
 		count += countForPath
+		LogDebug("count is now %d", count)
 		return nil
 	})
 	if err != nil {
