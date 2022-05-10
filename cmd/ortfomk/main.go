@@ -24,6 +24,7 @@ Arguments:
 Options:
 	--write-progress=<filepath>   Write current build progress to <filepath>
 	--silent                      Don't output progress status to console
+	--clean					      Clean the output directory before building
 
 Build Progress:
   For integration purposes, the current build progress can be written to a file.
@@ -50,6 +51,7 @@ func main() {
 	usage := CLIUsage
 	args, _ := docopt.ParseDoc(usage)
 	isSilent, _ := args.Bool("--silent")
+	clean, _ := args.Bool("--clean")
 	progressFilePath, _ := args.String("--write-progress")
 	outputDirectory, _ := args.String("<destination>")
 	templatesDirectory, _ := args.String("<templates>")
@@ -68,12 +70,9 @@ func main() {
 	//
 	// Preparing dist directory
 	//
-	err := os.MkdirAll("dist/fr/using", 0777)
-	if err != nil {
-		ortfomk.LogError("Couldn't create directories for writing: %s", err)
-		return
+	if _, err := os.Stat(outputDirectory); err == nil && clean {
+		os.RemoveAll(outputDirectory)
 	}
-	os.MkdirAll("dist/en/using", 0777)
 	//
 	// Loading files
 	//
