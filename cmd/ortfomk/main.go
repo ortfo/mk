@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -48,6 +49,12 @@ Build Progress:
 `
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			showCursor()
+			ortfomk.LogFatal("ortfo/mk crashed… Here's why: %s", r)
+		}
+	}()
 	usage := CLIUsage
 	args, _ := docopt.ParseDoc(usage)
 	isSilent, _ := args.Bool("--silent")
@@ -144,4 +151,9 @@ func main() {
 
 		ortfomk.CoolDown()
 	}
+}
+
+// showCursor is used to make the cursor again without relying on the spinner working, in cases where the program crashes.
+func showCursor() {
+	fmt.Printf("\033[?25h")
 }

@@ -109,6 +109,13 @@ func LogError(message string, fmtArgs ...interface{}) {
 	spinner.Unpause()
 }
 
+// LogFatal logs fatal errors.
+func LogFatal(message string, fmtArgs ...interface{}) {
+	spinner.Pause()
+	colorstring.Fprintf(os.Stderr, "\033[2K\r[invert][bold][red]crash[reset] [bold][dim](%s)[reset] %s\n", currentWorkID, fmt.Sprintf(message, fmtArgs...))
+	spinner.Unpause()
+}
+
 // LogInfo logs infos.
 func LogInfo(message string, fmtArgs ...interface{}) {
 	spinner.Pause()
