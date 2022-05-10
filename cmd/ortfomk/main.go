@@ -10,7 +10,7 @@ import (
 
 const CLIUsage = `
 Usage:
-	ortfomk <templates> (build|develop) with <database> to <destination> [options]
+	ortfomk (build|develop) <templates> with <database> to <destination> [options]
 
 Commands:
 	build            Build the website
@@ -18,7 +18,7 @@ Commands:
 
 Arguments:
 	<database>       Path to the database JSON file
-	<templates>      Path to .pug or .html template files
+	<templates>      Path to the directory containing .pug or .html template files
 	<destination>    Path to the output directory, where the site will be built.
 
 Options:
