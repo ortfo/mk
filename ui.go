@@ -116,7 +116,14 @@ func UpdateSpinner() {
 		currentObjectType = "page"
 	}
 
-	fullMessage := colorstring.Color(fmt.Sprintf("[light_blue]%3d%%[reset] [bold][green]%s[reset] [bold]%s [yellow]%s[reset][bold][dim]:[reset] %s…", g.ProgressFileData().Percent, currentObjectType, g.CurrentObjectID, g.CurrentLanguage, message))
+	fullMessage := colorstring.Color(fmt.Sprintf(
+		"[light_blue]%3d%%[reset] [bold][green]%s[reset] [bold]%s [yellow]%s[reset][bold][dim]:[reset] %s…",
+		g.ProgressPercent(),
+		currentObjectType,
+		g.CurrentObjectID,
+		g.CurrentLanguage,
+		message,
+	))
 	g.Spinner.Message(fullMessage)
 }
 

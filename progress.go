@@ -91,12 +91,20 @@ func WriteProgressFile() error {
 	return ioutil.WriteFile(g.Flags.ProgressFile, progressDataJSON, 0644)
 }
 
+// ProgressPercent returns the current progress as a percentage.
+func (g *GlobalData) ProgressPercent() int {
+	if g.Progress.Total == 0 {
+		return 0
+	}
+	return int(math.Floor(float64(g.Progress.Current) / float64(g.Progress.Total) * 100))
+}
+
 // ProgressFileData returns a ProgressData struct ready to be marshalled to JSON for --write-progress.
 func (g *GlobalData) ProgressFileData() ProgressFile {
 	return ProgressFile{
 		Total:     g.Progress.Total,
 		Processed: g.Progress.Current,
-		Percent:   int(math.Floor(float64(g.Progress.Current) / float64(g.Progress.Total) * 100)),
+		Percent:   g.ProgressPercent(),
 		Current: struct {
 			ID         string    `json:"id"`
 			Step       BuildStep `json:"step"`
