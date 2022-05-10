@@ -3,6 +3,7 @@ package ortfomk
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -63,25 +64,42 @@ func CreateSpinner() Spinner {
 	return spinner
 }
 
+// absorb absorbs errors and returns the inner value, silently ignoring errors.
+// It's kind of like Rust's .unwrap_or_default().
+// Use wisely and as sparsely as possible.
+func absorb[T any](value T, err error) (val T) {
+	if err == nil {
+		val = value
+	}
+	return
+}
+
 func UpdateSpinner() {
 	var message string
+	cwdRel := func(p string) string {
+		if pretty, err := filepath.Rel(absorb(os.Getwd()), p); err == nil {
+			return pretty
+		} else {
+			return p
+		}
+	}
 	switch g.Progress.Step {
 	case StepBuildPage:
-		message = fmt.Sprintf("Building page [magenta]%s[reset] as [magenta]%s[reset]", g.Progress.File, g.CurrentOutputFile)
+		message = fmt.Sprintf("Building page [magenta]%s[reset] as [magenta]%s[reset]", cwdRel(g.Progress.File), cwdRel(g.CurrentOutputFile))
 	case StepDeadLinks:
 		message = "Checking for dead links (this might take a while, disable it with DEADLINKS_CHECK=0)"
 	case StepGeneratePDF:
-		message = fmt.Sprintf("Generating PDF for [magenta]%s[reset] as [magenta]%s[reset]", g.Progress.File, g.CurrentOutputFile)
+		message = fmt.Sprintf("Generating PDF for [magenta]%s[reset] as [magenta]%s[reset]", cwdRel(g.Progress.File), cwdRel(g.CurrentOutputFile))
 	case StepLoadExternalSites:
-		message = fmt.Sprintf("Loading external sites from [magenta]%s[reset]", g.Progress.File)
+		message = fmt.Sprintf("Loading external sites from [magenta]%s[reset]", cwdRel(g.Progress.File))
 	case StepLoadTags:
-		message = fmt.Sprintf("Loading tags from [magenta]%s[reset]", g.Progress.File)
+		message = fmt.Sprintf("Loading tags from [magenta]%s[reset]", cwdRel(g.Progress.File))
 	case StepLoadTechnologies:
-		message = fmt.Sprintf("Loading technologies from [magenta]%s[reset]", g.Progress.File)
+		message = fmt.Sprintf("Loading technologies from [magenta]%s[reset]", cwdRel(g.Progress.File))
 	case StepLoadTranslations:
-		message = fmt.Sprintf("Loading translations from [magenta]%s[reset]", g.Progress.File)
+		message = fmt.Sprintf("Loading translations from [magenta]%s[reset]", cwdRel(g.Progress.File))
 	case StepLoadWorks:
-		message = fmt.Sprintf("Loading works from database [magenta]%s[reset]", g.Progress.File)
+		message = fmt.Sprintf("Loading works from database [magenta]%s[reset]", cwdRel(g.Progress.File))
 	default:
 		message = string(g.Progress.Step)
 	}
