@@ -10,9 +10,9 @@ import (
 )
 
 //go:embed template.js
-var templateJSFile string
+var staticTemplateFunctions string
 
-func GenerateJSFile(hydration *Hydration, templateName string, compiledTemplate string) (string, error) {
+func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTemplate string) (string, error) {
 	var assetsTemplate string
 	var mediaTemplate string
 
@@ -29,7 +29,7 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledTemplate 
 		const asset = path => %q.replace('<path>', path);
 	`, mediaTemplate, assetsTemplate)
 
-	constantsToInject := map[string]interface{}{
+	dataToInject := map[string]interface{}{
 		"all_tags":         g.Tags,
 		"all_technologies": g.Technologies,
 		"all_sites":        g.Sites,
@@ -51,33 +51,34 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledTemplate 
 	}
 
 	if hydration.IsTag() {
-		constantsToInject["CurrentTag"] = hydration.tag
+		dataToInject["CurrentTag"] = hydration.tag
 	}
 	if hydration.IsTech() {
-		constantsToInject["CurrentTech"] = hydration.tech
+		dataToInject["CurrentTech"] = hydration.tech
 	}
 	if hydration.IsSite() {
-		constantsToInject["CurrentSite"] = hydration.site
+		dataToInject["CurrentSite"] = hydration.site
 	}
 	if hydration.IsWork() {
-		constantsToInject["CurrentWork"] = hydration.work.InLanguage(hydration.language)
+		dataToInject["CurrentWork"] = hydration.work.InLanguage(hydration.language)
 		layedout, err := hydration.work.InLanguage(hydration.language).LayedOut()
 		if err != nil {
 			return "", fmt.Errorf("while laying out %s: %w", hydration.Name(), err)
 		}
 
-		constantsToInject["CurrentWorkLayedOut"] = layedout
+		dataToInject["CurrentWorkLayedOut"] = layedout
 	}
 
 	dataDeclarations := make([]string, 0)
-	for name, value := range constantsToInject {
+	for name, value := range dataToInject {
+		// Don't use JSON tags, use the Go struct field names
 		jsoned, err := jsoniter.Config{TagKey: "notjson"}.Froze().MarshalToString(value)
 		if err != nil {
 			return "", fmt.Errorf("while converting %s JSON: %w", name, err)
 		}
 		dataDeclarations = append(dataDeclarations, fmt.Sprintf("const %s = %s;", name, jsoned))
 	}
-	dataObject := "{ " + strings.Join(keys(constantsToInject), ", ") + " }"
+	templateCall := "template({ " + strings.Join(keys(dataToInject), ", ") + " });"
 
-	return "/*prelude*/" + prelude + "\n/*data*/\n" + strings.Join(dataDeclarations, "\n") + "\n/*templateStatic*/\n" + templateJSFile + "\n/*pugCOmpiled*/\n" + compiledTemplate + "\n" + fmt.Sprintf(`template(%s)`, dataObject), nil
+	return "/*prelude*/" + prelude + "\n/*data*/\n" + strings.Join(dataDeclarations, "\n") + "\n/*static template functions*/\n" + staticTemplateFunctions + "\n/*compiled pug template*/\n" + compiledPugTemplate + "\n/*template call*/\n" + templateCall, nil
 }
