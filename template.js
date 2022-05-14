@@ -6,6 +6,18 @@ function printf(format, ...args) {
   return format.replace(/%s/g, () => args.shift());
 }
 
+function closestTo(target, ...available) {
+  // Put the target in its place inside available values
+  const a = [...available, target].sort()
+  // Get the two closest values to target (if target is not available, target will appear twice, so no problem here)
+  const targetIdx = a.indexOf(target);
+  const candidates = [a[targetIdx-1], a[targetIdx+1]]
+  if (candidates.includes(target)) {
+    return target
+  }
+  return candidates[0]
+}
+
 function lookupTag(name) {
   return all_tags.find((tag) =>
     [tag.Plural, tag.Singular, URLName(tag), ...(tag.Aliases || [])]
@@ -97,6 +109,13 @@ function ThumbnailSource(work, resolution) {
   if (!key) {
     return "";
   }
+  const availableResolutions = Object.keys(work.Metadata.Thumbnails[key]).map(parseFloat)
+  if (!availableResolutions.length) {
+  throw Error(
+    `No thumbnails available for ${key}.\nAvailable thumbnails for work ${work.id}: ${Object.keys(work.Metadata.Thumbnails).join(", ")}`
+  );
+  }
+  resolution = closestTo(resolution, ...availableResolutions)
   if (resolution > 0) {
     const thumbSource = work.Metadata.Thumbnails?.[key]?.[resolution];
     if (thumbSource) {
@@ -104,9 +123,7 @@ function ThumbnailSource(work, resolution) {
     }
   }
   throw Error(
-    `No thumbnail at size ${resolution} for ${key}.\nThumbnails for this work: ${JSON.stringify(
-      work.Metadata.Thumbnails
-    )}`
+    `No thumbnail at size ${resolution} for ${key}.\nAvailable resolutions for ${key} (in px): ${availableResolutions.join(", ")}`
   );
 }
 
