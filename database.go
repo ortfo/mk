@@ -136,6 +136,9 @@ func (work *WorkOneLang) Created() time.Time {
 	} else {
 		creationDate = work.Metadata.Finished
 	}
+	if creationDate == "" {
+		return time.Date(9999, time.January, 1, 0, 0, 0, 0, time.Local)
+	}
 	parsedDate, err := ParseCreationDate(creationDate)
 	if err != nil {
 		LogError("Error while parsing creation date of %v:", work.ID)
