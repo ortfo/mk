@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
+	"github.com/jaytaylor/html2text"
 	jsoniter "github.com/json-iterator/go"
 	ortfodb "github.com/ortfo/db"
 )
@@ -22,6 +24,7 @@ type workOneLangFrozen struct {
 	ColorsMap map[string]string
 	Created   time.Time
 	IsWIP     bool
+	Summary   string
 }
 
 // layedOutElementFrozen stores a layed out element along with the result of calling
@@ -184,7 +187,6 @@ func (w WorkOneLang) ColorsMap() map[string]string {
 	return colorsMap
 }
 
-
 func (w WorkOneLang) Freeze() workOneLangFrozen {
 	return workOneLangFrozen{
 		WorkOneLang: w,
@@ -192,5 +194,55 @@ func (w WorkOneLang) Freeze() workOneLangFrozen {
 		ColorsMap:   w.ColorsMap(),
 		Created:     w.Created(),
 		IsWIP:       w.IsWIP(),
+		Summary:     w.Summary(),
 	}
+}
+
+func (w WorkOneLang) Summary() string {
+	if len(w.Paragraphs) == 0 {
+		return ""
+	}
+
+	summary := w.Paragraphs[0].Content
+	html, err := goquery.NewDocumentFromReader(strings.NewReader(summary))
+	if err != nil {
+		LogError("while creating plain text of first paragraph: %s", err)
+		return ""
+	}
+	html.Find("sup.footnote-ref").Each(func(i int, s *goquery.Selection) {
+		s.ReplaceWithHtml(superscriptize(s.Find("a").First().Text()))
+	})
+	summary, err = html.Html()
+	if err != nil {
+		LogError("while creating plain text of first paragraph: %s", err)
+		return ""
+	}
+	summary, err = html2text.FromString(summary, html2text.Options{
+		OmitLinks: true,
+		TextOnly:  true,
+	})
+	if err != nil {
+		LogError("while creating plain text of first paragraph: %s", err)
+		return ""
+	}
+	return summary
+}
+
+// superscriptize replaces all number characters in given text with their unicode superscript equivalent.
+func superscriptize(text string) string {
+	for original, superscript := range map[string]string{
+		"0": "⁰",
+		"1": "¹",
+		"2": "²",
+		"3": "³",
+		"4": "⁴",
+		"5": "⁵",
+		"6": "⁶",
+		"7": "⁷",
+		"8": "⁸",
+		"9": "⁹",
+	} {
+		text = strings.ReplaceAll(text, original, superscript)
+	}
+	return text
 }
