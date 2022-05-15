@@ -50,14 +50,13 @@ func SummarizeString(s string, targetLength uint32) string {
 	return s
 }
 
-// ParseCreationDate parses datestring using iso8601. If the year is "????", replace it with year 0000
+// ParseCreationDate parses datestring using iso8601. If the year is "????", replace it with year 9999
 func ParseCreationDate(datestring string) (time.Time, error) {
-	parsedDate, err := iso8601.ParseString(
+	return iso8601.ParseString(
 		strings.ReplaceAll(
-			strings.Replace(datestring, "????", "0000", 1), "?", "1",
+			strings.Replace(datestring, "????", "9999", 1), "?", "1",
 		),
 	)
-	return parsedDate, err
 }
 
 // StringsLooselyMatch checks if s1 is equal to any of sn, but case-insensitively.
