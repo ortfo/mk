@@ -11,11 +11,11 @@ function closestTo(target, ...available) {
   const a = [...available, target].sort()
   // Get the two closest values to target (if target is not available, target will appear twice, so no problem here)
   const targetIdx = a.indexOf(target);
-  const candidates = [a[targetIdx-1], a[targetIdx+1]]
+  const candidates = [a[targetIdx-1], a[targetIdx+1]].filter(c => !!c)
   if (candidates.includes(target)) {
     return target
   }
-  return candidates[0]
+  return candidates.reverse()[0]
 }
 
 function lookupTag(name) {
