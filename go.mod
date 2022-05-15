@@ -6,10 +6,13 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.7.2
 	github.com/alecthomas/chroma v0.10.0
+	github.com/antonmedv/expr v1.9.0
 	github.com/chai2010/gettext-go v1.0.2
 	github.com/davecgh/go-spew v1.1.1
+	github.com/deckarep/golang-set v1.8.0
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/invopop/jsonschema v0.4.0
+	github.com/jaytaylor/html2text v0.0.0-20211105163654-bc68cce691ba
 	github.com/joho/godotenv v1.4.0
 	github.com/json-iterator/go v1.1.12
 	github.com/mattn/go-isatty v0.0.14
@@ -21,8 +24,9 @@ require (
 	github.com/stretchr/testify v1.7.1
 	github.com/theckman/yacspin v0.13.12
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4
+	golang.org/x/net v0.0.0-20220513224357-95641704303c
 	gopkg.in/yaml.v2 v2.4.0
+	rogchap.com/v8go v0.7.0
 )
 
 require (
@@ -30,8 +34,6 @@ require (
 	github.com/JohannesKaufmann/html-to-markdown v1.3.3 // indirect
 	github.com/anaskhan96/soup v1.2.5 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
-	github.com/antonmedv/expr v1.9.0
-	github.com/deckarep/golang-set v1.8.0
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
@@ -44,9 +46,11 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/oliamb/cutter v0.2.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	github.com/ssttevee/go-ffmpeg v0.2.1 // indirect
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
@@ -56,5 +60,4 @@ require (
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	rogchap.com/v8go v0.7.0
 )
