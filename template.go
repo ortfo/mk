@@ -27,6 +27,20 @@ type workOneLangFrozen struct {
 	Summary   string
 }
 
+type tagFrozen struct {
+	Tag
+
+	// Frozen methods
+	URLName string
+}
+
+func (t Tag) Freeze() tagFrozen {
+	return tagFrozen{
+		Tag:     t,
+		URLName: t.URLName(),
+	}
+}
+
 // layedOutElementFrozen stores a layed out element along with the result of calling
 // some niladic methods such as .Title, .ID, etc. so that they can be marshalled into JSON.
 // This solution is clunky, but works until https://github.com/json-iterator/go/issues/616 is fixed.
@@ -81,7 +95,13 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 	`, mediaTemplate, assetsTemplate)
 
 	dataToInject := map[string]interface{}{
-		"all_tags":         g.Tags,
+		"all_tags": func() []tagFrozen {
+			frozenTags := make([]tagFrozen, len(g.Tags))
+			for _, tag := range g.Tags {
+				frozenTags = append(frozenTags, tag.Freeze())
+			}
+			return frozenTags
+		}(),
 		"all_technologies": g.Technologies,
 		"all_sites":        g.Sites,
 		"all_works": func() []interface{} {
@@ -102,7 +122,7 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 	}
 
 	if hydration.IsTag() {
-		dataToInject["CurrentTag"] = hydration.tag
+		dataToInject["CurrentTag"] = hydration.tag.Freeze()
 	}
 	if hydration.IsTech() {
 		dataToInject["CurrentTech"] = hydration.tech
