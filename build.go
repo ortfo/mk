@@ -1,7 +1,6 @@
 package ortfomk
 
 import (
-	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -132,19 +131,27 @@ func BuildAll(in string) (built []string, err error) {
 		if err != nil {
 			return err
 		}
-		if strings.HasPrefix(entry.Name(), ":work") || strings.HasPrefix(entry.Name(), ":if(work") {
-			built = append(built, BuildWorkPages(path)...)
-		} else if strings.HasPrefix(entry.Name(), ":tag") {
-			built = append(built, BuildTagPages(path)...)
-		} else if strings.HasPrefix(entry.Name(), ":technology") {
-			built = append(built, BuildTechPages(path)...)
-		} else if strings.HasPrefix(entry.Name(), ":site") {
-			built = append(built, BuildSitePages(path)...)
-		} else if strings.HasPrefix(entry.Name(), ":") {
-			return fmt.Errorf("dynamic path %s uses unknown variable %s", path, strings.TrimPrefix(entry.Name(), ":"))
-		} else {
-			built = append(built, BuildRegularPage(path)...)
+
+		for _, expr := range DynamicPathExpressions(entry.Name()) {
+			switch expr {
+			case "work":
+				built = append(built, BuildWorkPages(path)...)
+				return err
+			case "tag":
+				built = append(built, BuildTagPages(path)...)
+				return err
+			case "technology":
+				fallthrough
+			case "tech":
+				built = append(built, BuildTechPages(path)...)
+				return err
+			case "site":
+				built = append(built, BuildSitePages(path)...)
+				return err
+			}
 		}
+
+		built = append(built, BuildRegularPage(path)...)
 		return err
 	})
 	return
