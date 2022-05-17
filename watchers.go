@@ -111,6 +111,7 @@ func UpdateExtendsStatement(in string, from string, to string) {
 	if err != nil {
 		LogError(fmt.Sprintf("While updating the extends statement in %s from %s to %s: could not open file %s", in, from, to, in), err)
 	}
+	defer file.Close()
 	contents, err := os.ReadFile(in)
 	if err != nil {
 		LogError(fmt.Sprintf("While updating the extends statement in %s from %s to %s: could not read file %s", in, from, to, in), err)

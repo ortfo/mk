@@ -166,6 +166,7 @@ func (h *Hydration) WriteDistFile(fileName string, content string, language stri
 		LogError("Could not create the destination file %s: %s ", distFilePath, err)
 		return ""
 	}
+	defer distFile.Close()
 	_, err = distFile.WriteString(content)
 	if err != nil {
 		LogError("Could not write to the destination file %s: %s", distFilePath, err)

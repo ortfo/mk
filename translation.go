@@ -33,6 +33,7 @@ func (t TranslationsOneLang) WriteUnusedMsgIds() error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	for _, message := range t.poFile.Messages {
 		if !t.seenMsgIds.Contains(message.MsgId) {
 			_, err = file.WriteString(fmt.Sprintf("- %#v\n", message.MsgId))
