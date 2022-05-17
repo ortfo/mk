@@ -105,9 +105,16 @@ function IsWIP(work) {
 function ThumbnailSource(work, resolution) {
   const isLayedOutElement =
     Object.getOwnPropertyNames(work).includes("LayoutIndex")
-  const key =
-    work.Metadata.Thumbnail ||
-    (isLayedOutElement ? work.Path : work.Media?.[0]?.Path)
+  let key
+  if (isLayedOutElement) {
+    key = work.Path
+  } else {
+    if (work?.Metadata?.Thumbnail) {
+      key = work.Media?.find(m => m.Source === work.Metadata.Thumbnail)?.Path
+    } else {
+      key = work.Media?.[0]?.Path
+    }
+  }
   if (!key) {
     return ""
   }

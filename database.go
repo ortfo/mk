@@ -53,6 +53,7 @@ type WorkMetadata struct {
 	Title          string
 	WIP            bool `json:"wip"`
 	Thumbnails     map[string]map[uint16]string
+	Thumbnail      string // Key in Thumbnails for the thumbnail to use to represent this work
 }
 
 // Database holds works & other metadata
