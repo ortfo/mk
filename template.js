@@ -8,7 +8,7 @@ function printf(format, ...args) {
 
 function closestTo(target, ...available) {
   // Put the target in its place inside available values
-  const a = [...available, target].sort()
+  const a = [...available, target].sort((a, b) => a - b)
   // Get the two closest values to target (if target is not available, target will appear twice, so no problem here)
   const targetIdx = a.indexOf(target)
   const candidates = [a[targetIdx - 1], a[targetIdx + 1]].filter(c => !!c)
