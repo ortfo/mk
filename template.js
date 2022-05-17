@@ -131,22 +131,30 @@ function yearsOfWorks(works) {
   return [...new Set(works.map((w) => CreatedAt(w).getFullYear()))];
 }
 
-function withTag(works, tag) {
-  if (typeof tag === "string") {
-    tag = lookupTag(tag);
+function withTag(works, ...tags) {
+  let output = works
+  for (let tag of tags) {
+    if (typeof tag === "string") {
+      tag = lookupTag(tag)
+    }
+    output = output.filter(work =>
+      work.Metadata.Tags.some(t => lookupTag(t)?.Singular === tag.Singular)
+    )
   }
-  return works.filter((work) =>
-    work.Metadata.Tags.some((t) => lookupTag(t)?.Singular === tag.Singular)
-  );
+  return output
 }
 
-function withTech(works, tech) {
-  if (typeof tech === "string") {
-    tech = lookupTech(tech);
+function withTech(works, ...techs) {
+  let output = works
+  for (let tech of techs) {
+    if (typeof tech === "string") {
+      tech = lookupTech(tech)
+    }
+    output = output.filter(work =>
+      work.Metadata.MadeWith.some(t => lookupTech(t)?.URLName === tech.URLName)
+    )
   }
-  return works.filter((work) =>
-    work.Metadata.MadeWith.some((t) => lookupTech(t)?.URLName === tech.URLName)
-  );
+  return output
 }
 
 function withWIPStatus(status, works) {
