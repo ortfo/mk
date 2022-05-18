@@ -102,25 +102,24 @@ function IsWIP(work) {
   )
 }
 
-function ThumbnailSource(work, resolution) {
+function thumbnailKey(work) {
   const isLayedOutElement =
     Object.getOwnPropertyNames(work).includes("LayoutIndex")
-  let key
   if (isLayedOutElement) {
-    key = work.Path
-  } else {
-    if (work?.Metadata?.Thumbnail) {
-      key = work.Media?.find(m => m.Source === work.Metadata.Thumbnail)?.Path
-    } else {
-      key = work.Media?.[0]?.Path
-    }
+    return work.Path
   }
+  if (work?.Metadata?.Thumbnail) {
+    return work.Media?.find(m => m.Source === work.Metadata.Thumbnail)?.Path
+  }
+  return work.Media?.[0]?.Path
+}
+
+function ThumbnailSource(work, resolution) {
+  const key = thumbnailKey(work)
   if (!key) {
     return ""
   }
-  const availableResolutions = Object.keys(work.Metadata.Thumbnails[key]).map(
-    parseFloat
-  )
+  const availableResolutions = availableResolutionsForThumbnail(work, key)
   if (!availableResolutions.length) {
     throw Error(
       `No thumbnails available for ${key}.\nAvailable thumbnails for work ${
@@ -140,6 +139,22 @@ function ThumbnailSource(work, resolution) {
       ", "
     )}`
   )
+}
+
+function availableResolutionsForThumbnail(work, key) {
+  return Object.keys(work.Metadata.Thumbnails[key]).map(parseFloat)
+}
+
+function ThumbnailSourcesSet(work) {
+  const key = thumbnailKey(work)
+  if (!key) return ""
+
+  let result = []
+
+  for (const resolution of availableResolutionsForThumbnail(work, key)) {
+    result.push(`${ThumbnailSource(work, resolution)} ${resolution}w`)
+  }
+  return result.join(",")
 }
 
 function yearsOfWorks(works) {
