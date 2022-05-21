@@ -168,3 +168,50 @@ func LogWarning(message string, fmtArgs ...interface{}) {
 	colorstring.Fprintf(os.Stderr, "\033[2K\r[yellow]warn [reset] [bold][dim](%s)[reset] %s\n", currentWorkID, fmt.Sprintf(message, fmtArgs...))
 	spinner.Unpause()
 }
+
+// codeSpinnetAround shows a 10-line code exerpt around the given line.
+// Line numbers are displayed on the left.
+func codeSpinnetAround(file string, lineNumber uint64, columnNumber uint64) string {
+	output := ""
+	for i, line := range strings.Split(file, "\n") {
+		if uint64(i) >= lineNumber-1-5 && uint64(i) <= lineNumber-1+5 {
+			line := fmt.Sprintf("%3d | %s\n", i+1, truncateLineAround(line, int(columnNumber)-1, 200))
+			if uint64(i) == lineNumber-1 {
+				line = "> " + line
+			} else {
+				line = "  " + line
+			}
+			output += line
+		}
+	}
+	return output
+}
+
+// truncateLineAround truncates a line to a maximum length, centered around the character the given index.
+// when the line exceeds the maximum length, it is truncated at the given index.
+func truncateLineAround(line string, columnIndex int, maxLength int) string {
+	if len(line) <= maxLength {
+		return line
+	}
+	var ellipsisLeft, ellipsisRight bool
+	start := columnIndex - maxLength/2
+	if start < 0 {
+		start = 0
+	} else {
+		ellipsisLeft = true
+	}
+	end := start + maxLength
+	if end > len(line) {
+		end = len(line)
+	} else {
+		ellipsisRight = true
+	}
+	output := line[start:end]
+	if ellipsisLeft {
+		output = "…" + output
+	}
+	if ellipsisRight {
+		output = output + "…"
+	}
+	return output
+}

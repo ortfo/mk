@@ -169,6 +169,10 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 		dataToInject["CurrentWorkLayedOut"] = frozenLayout
 	}
 
+	for key, value := range g.AdditionalData {
+		dataToInject[key] = value
+	}
+
 	dataDeclarations := make([]string, 0)
 	for name, value := range dataToInject {
 		// Don't use JSON tags, use the Go struct field names

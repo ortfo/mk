@@ -11,7 +11,7 @@ import (
 
 const CLIUsage = `
 Usage:
-	ortfomk (build|develop) <templates> with <database> to <destination> [options]
+	ortfomk (build|develop) <templates> with <database> to <destination> [--load=<filepath>]... [options]
 
 Commands:
 	build            Build the website
@@ -26,6 +26,10 @@ Options:
 	--write-progress=<filepath>   Write current build progress to <filepath>
 	--silent                      Don't output progress status to console
 	--clean					      Clean the output directory before building
+	--load=<filepath>             Path to a JSON or YAML file containing additional data which
+							      will be available to templates as objects (or arrays) whose names will
+								  be the files', but without the extension, and turned into camelCase
+								  (e.g. "my-data.json"'s data is available as "myData").
 
 Build Progress:
   For integration purposes, the current build progress can be written to a file.
@@ -67,11 +71,14 @@ func main() {
 		Silent:       isSilent,
 		ProgressFile: progressFilePath,
 	}
+	additionalDataFiles, _ := args["--load"].([]string)
+	additionalData, err := ortfomk.LoadAdditionalData(additionalDataFiles)
 	ortfomk.WarmUp(ortfomk.GlobalData{
 		Flags:              flags,
 		OutputDirectory:    outputDirectory,
 		TemplatesDirectory: templatesDirectory,
 		HTTPLinks:          make(map[string][]string),
+		AdditionalData: additionalData,
 	})
 
 	//

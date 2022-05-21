@@ -26,6 +26,7 @@ func WritePDF(html string, to string) error {
 		return fmt.Errorf("could not create the pdf file: %w", err)
 	}
 
+	LogDebug("writing pdf to %s", to)
 	err = generator.WriteFile(to)
 	if err != nil {
 		return fmt.Errorf("could not write the created pdf file to %q: %w", to, err)

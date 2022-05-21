@@ -3,6 +3,7 @@ package ortfomk
 import (
 	"encoding/hex"
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -142,4 +143,9 @@ func keys[K comparable, V any](m map[K]V) []K {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+// filepathStem returns the base of a path with the extension removed
+func filepathStem(path string) string {
+	return strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 }

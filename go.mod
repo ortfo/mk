@@ -21,11 +21,13 @@ require (
 	github.com/ortfo/db v0.0.0-20220430175239-84e2a21af8b4
 	github.com/radovskyb/watcher v1.0.7
 	github.com/relvacode/iso8601 v1.1.0
+	github.com/stoewer/go-strcase v1.2.0
 	github.com/stretchr/testify v1.7.1
 	github.com/theckman/yacspin v0.13.12
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4
 	golang.org/x/net v0.0.0-20220513224357-95641704303c
 	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	rogchap.com/v8go v0.7.0
 )
 
@@ -59,5 +61,4 @@ require (
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9 // indirect
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

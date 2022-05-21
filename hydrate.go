@@ -48,13 +48,13 @@ func (h *Hydration) IsSite() bool {
 // and defaults to the empty string if the current hydration is empty
 func (h *Hydration) Name() string {
 	if h.IsWork() {
-		return h.work.ID + "-" + h.language
+		return h.work.ID + "@" + h.language
 	}
 	if h.IsTag() {
-		return h.tag.URLName() + "-" + h.language
+		return h.tag.URLName() + "@" + h.language
 	}
 	if h.IsTech() {
-		return h.tech.URLName + "-" + h.language
+		return h.tech.URLName + "@" + h.language
 	}
 	return h.language
 }
@@ -127,11 +127,29 @@ func RunTemplate(hydration *Hydration, templateName string, compiledTemplate []b
 	LogDebug("executing template")
 	ctx := v8.NewContext()
 	jsValue, err := ctx.RunScript(compiledJSFile, templateName+".js")
-	LogDebug("finihsed executing")
-	if err != nil {
-		return "", fmt.Errorf("while executing template: %w", err)
+	LogDebug("finished executing")
+	if err, ok := err.(*v8.JSError); ok {
+		line, column := lineAndColumn(err)
+		codeSpinnet := codeSpinnetAround(compiledJSFile, line, column)
+		return "", fmt.Errorf("while running template: %w\n%s\nStack trace:\n%s", err, codeSpinnet, err.StackTrace)
 	}
 	return jsValue.String(), nil
+}
+
+func lineAndColumn(err *v8.JSError) (line uint64, column uint64) {
+	parts := strings.Split(err.Location, ":")
+	for i, part := range parts {
+		var parseErr error
+		if i == len(parts)-1 {
+			line, parseErr = strconv.ParseUint(part, 10, 64)
+		} else if i == len(parts)-2 {
+			column, parseErr = strconv.ParseUint(part, 10, 64)
+		}
+		if parseErr != nil {
+			panic(fmt.Sprintf("while parsing positive integer %s: %s", part, parseErr))
+		}
+	}
+	return
 }
 
 // TranslateHydrated translates an hydrated HTML page, removing i18n tags and attributes

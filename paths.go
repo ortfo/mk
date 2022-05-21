@@ -15,7 +15,6 @@ import (
 // the result is anything else (stringifying the type with "%s"). If the result is an empty string, it becomes indistinguishable from a false boolean result.
 // This is within expectations: an empty string, as well as a false boolean, means that this hydration with this path should not be rendered.
 func EvaluateDynamicPathExpression(h *Hydration, expression string) (stringResult string, boolResult bool, err error) {
-	LogDebug("Evaluating dynamic path expression %q", expression)
 	// Expand "is" assertions syntax
 	if matches := regexp.MustCompile(`^(\w+)\s+is\s+(.+)$`).FindStringSubmatch(expression); matches != nil {
 		expression = fmt.Sprintf(`%s == %s ? %s : ""`, matches[1], matches[2], matches[2])
@@ -24,6 +23,7 @@ func EvaluateDynamicPathExpression(h *Hydration, expression string) (stringResul
 	if cached, ok := DynamicPathExpressionsCahe[expression]; ok {
 		compiledExpr = cached
 	} else {
+		LogDebug("Compiling dynamic path expression %q", expression)
 		compiledExpr, err = expr.Compile(expression)
 		DynamicPathExpressionsCahe[expression] = compiledExpr
 	}
