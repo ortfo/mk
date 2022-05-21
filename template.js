@@ -22,7 +22,7 @@ function lookupTag(name) {
   return all_tags.find(tag =>
     [tag.Plural, tag.Singular, URLName(tag), ...(tag.Aliases || [])]
       .map(s => s.toLowerCase())
-      .includes(name)
+      .includes(name.toLowerCase())
   )
 }
 
@@ -30,7 +30,7 @@ function lookupTech(name) {
   return all_technologies.find(tech =>
     [tech.URLName, tech.DisplayName, ...(tech.Aliases || [])]
       .map(s => s.toLowerCase())
-      .includes(name)
+      .includes(name.toLowerCase())
   )
 }
 
@@ -102,16 +102,16 @@ function IsWIP(work) {
   )
 }
 
-function thumbnailKey(work) {
+function thumbnailKey(workOrLayedOutElement) {
   const isLayedOutElement =
-    Object.getOwnPropertyNames(work).includes("LayoutIndex")
+    Object.getOwnPropertyNames(workOrLayedOutElement).includes("LayoutIndex")
   if (isLayedOutElement) {
-    return work.Path
+    return workOrLayedOutElement.Path
   }
-  if (work?.Metadata?.Thumbnail) {
-    return work.Media?.find(m => m.Source === work.Metadata.Thumbnail)?.Path
+  if (workOrLayedOutElement?.Metadata?.Thumbnail) {
+    return workOrLayedOutElement.Media?.find(m => m.Source === workOrLayedOutElement.Metadata.Thumbnail)?.Path
   }
-  return work.Media?.[0]?.Path
+  return workOrLayedOutElement.Media?.[0]?.Path
 }
 
 function ThumbnailSource(work, resolution) {
