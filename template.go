@@ -119,6 +119,13 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 			return out
 		}(),
 		"current_language": hydration.language,
+		"current_path": func() string {
+			p, err := hydration.GetDistFilepath(templateName)
+			if err != nil {
+				LogError("Could not get dist filepath for template %s, this shouldn't happen.", templateName)
+			}
+			return strings.TrimPrefix(p, "dist/")
+		}(),
 	}
 
 	if hydration.IsTag() {
