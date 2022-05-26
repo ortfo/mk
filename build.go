@@ -1,6 +1,7 @@
 package ortfomk
 
 import (
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -9,6 +10,8 @@ import (
 	"strings"
 
 	exprVM "github.com/antonmedv/expr/vm"
+	"github.com/stoewer/go-strcase"
+	"gopkg.in/yaml.v3"
 )
 
 var g GlobalData = GlobalData{}
@@ -36,6 +39,7 @@ type GlobalData struct {
 	Flags              Flags
 	OutputDirectory    string
 	TemplatesDirectory string
+	AdditionalData     map[string]interface{}
 }
 
 type Flags struct {
@@ -68,6 +72,29 @@ func SetTranslationsOnGlobalData(translations map[string]TranslationsOneLang) {
 
 func SetDatabaseOnGlobalData(database Database) {
 	g.Database = database
+}
+
+func LoadAdditionalData(filesToLoad []string) (additionalData map[string]interface{}, err error) {
+	additionalData = make(map[string]interface{})
+	for _, file := range filesToLoad {
+		var loaded interface{}
+		content, err := ioutil.ReadFile(file)
+		if err != nil {
+			return additionalData, fmt.Errorf("while reading %s: %w", file, err)
+		}
+
+		err = yaml.Unmarshal([]byte(content), &loaded)
+		if err != nil {
+			return additionalData, fmt.Errorf("while parsing %s: %w", file, err)
+		}
+
+		if loaded == nil {
+			LogWarning("Loaded data from %s is null", file)
+		}
+
+		additionalData[strcase.LowerCamelCase(filepathStem(file))] = loaded
+	}
+	return additionalData, nil
 }
 
 func ComputeTotalToBuildCount() {
@@ -262,6 +289,7 @@ func BuildRegularPage(path string) (built []string) {
 
 // BuildPage builds a single page
 func BuildPage(pageName string, compiledTemplate []byte, hydration *Hydration) (built []string) {
+	// Add additional data to hydration
 	for _, language := range []string{"fr", "en"} {
 		hydration.language = language
 		outPath, err := hydration.GetDistFilepath(pageName)
@@ -286,7 +314,7 @@ func BuildPage(pageName string, compiledTemplate []byte, hydration *Hydration) (
 		)
 		if err != nil {
 			// PrintTemplateErrorMessage("executing template", NameOfTemplate(pageName, *hydration), string(compiledTemplate), err, "js")
-			LogError("couldn't execute template: %s", err)
+			LogError("couldn't execute template %s with %s: %s", pageName, hydration.Name(), err)
 			continue
 		}
 		content = g.Translations[language].TranslateHydrated(content)
@@ -298,8 +326,10 @@ func BuildPage(pageName string, compiledTemplate []byte, hydration *Hydration) (
 			g.HTTPLinks[link] = []string{outPath}
 		}
 		os.MkdirAll(filepath.Dir(outPath), 0777)
+		LogDebug("outputting to %s", outPath)
 		if strings.HasSuffix(outPath, ".pdf") {
 			WritePDF(content, outPath)
+			ioutil.WriteFile(strings.TrimSuffix(outPath, ".pdf")+".html", []byte(content), 0777)
 		} else {
 			ioutil.WriteFile(outPath, []byte(content), 0777)
 		}
