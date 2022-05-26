@@ -207,9 +207,9 @@ func GetOneLang(lang string, works ...Work) []WorkOneLang {
 }
 
 func GeneralContentType(media db.Media) string {
-	mediaGeneralContentType := strings.Split(media.ContentType, "/")[0]
 	if media.ContentType == "application/pdf" {
-		mediaGeneralContentType = "pdf"
+		return "pdf"
 	}
-	return mediaGeneralContentType
+	return strings.Split(media.ContentType, "/")[0]
+
 }
