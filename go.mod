@@ -27,15 +27,17 @@ require (
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4
 	golang.org/x/net v0.0.0-20220513224357-95641704303c
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	rogchap.com/v8go v0.7.0
 )
+
+require github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 
 require (
 	github.com/EdlinOrg/prominentcolor v1.0.0 // indirect
 	github.com/JohannesKaufmann/html-to-markdown v1.3.3 // indirect
 	github.com/anaskhan96/soup v1.2.5 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
+	github.com/denormal/go-gitignore v0.0.0-20180930084346-ae8ad1d07817
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
@@ -61,4 +63,5 @@ require (
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9 // indirect
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
