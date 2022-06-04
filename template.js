@@ -19,19 +19,27 @@ function closestTo(target, ...available) {
 }
 
 function lookupTag(name) {
-  return all_tags.find(tag =>
+  const tag = all_tags.find(tag =>
     [tag.Plural, tag.Singular, URLName(tag), ...(tag.Aliases || [])]
       .map(s => s.toLowerCase())
       .includes(name.toLowerCase())
   )
+  if (tag === undefined) {
+    throw Error("No tag found for " + name + ", be sure to add it in tags.yaml.")
+  }
+  return tag 
 }
 
 function lookupTech(name) {
-  return all_technologies.find(tech =>
+  const tech = all_technologies.find(tech =>
     [tech.URLName, tech.DisplayName, ...(tech.Aliases || [])]
       .map(s => s.toLowerCase())
       .includes(name.toLowerCase())
   )
+  if (tech === undefined) {
+    throw Error("No technology found for " + name + ", be sure to add it in technologies.yaml.")
+  }
+  return tech
 }
 
 function asText(html) {
