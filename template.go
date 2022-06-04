@@ -49,7 +49,7 @@ type layedOutElementFrozen struct {
 	LayoutIndex        int
 	Positions          [][]int
 	GeneralContentType string
-	Metadata           *WorkMetadata
+	Metadata           WorkMetadata
 
 	// ortfodb.Media
 	Alt         string
@@ -169,7 +169,7 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 				Content:            element.Content,
 				Name:               element.Name,
 				URL:                element.URL,
-				Metadata:           element.Metadata,
+				Metadata:           hydration.work.Metadata,
 			}
 		}
 
