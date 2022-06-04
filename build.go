@@ -103,6 +103,7 @@ func ComputeTotalToBuildCount() {
 
 func ToBuildTotalCount(in string) (count int) {
 	err := filepath.WalkDir(in, func(path string, entry fs.DirEntry, err error) error {
+		currentDirectory := filepath.Dir(path)
 		if strings.Contains(path, "/mixins/") {
 			return nil
 		}
@@ -111,6 +112,14 @@ func ToBuildTotalCount(in string) (count int) {
 		}
 		if err != nil {
 			return err
+		}
+		ortfoignore, err := closestOrtfoignore(currentDirectory)
+		if err != nil {
+			return err
+		}
+		if ortfoignore != nil  && ortfoignore.Ignore(path) {
+			LogDebug("ignoring %s because of ortfoignore at %s", path, filepath.Join(ortfoignore.Base(), ".ortfoignore"))
+			return nil
 		}
 		LogDebug("walking into %s", path)
 		countForPath := 1
@@ -149,6 +158,7 @@ func ToBuildTotalCount(in string) (count int) {
 func BuildAll(in string) (built []string, err error) {
 	err = filepath.WalkDir(in, func(path string, entry fs.DirEntry, err error) error {
 		LogDebug("Walking into %s", path)
+		currentDirectory := filepath.Dir(path)
 		if strings.Contains(path, "/mixins/") {
 			return nil
 		}
@@ -157,6 +167,14 @@ func BuildAll(in string) (built []string, err error) {
 		}
 		if err != nil {
 			return err
+		}
+		ortfoignore, err := closestOrtfoignore(currentDirectory)
+		if err != nil {
+			return err
+		}
+		if ortfoignore != nil  && ortfoignore.Ignore(path) {
+			LogDebug("ignoring %s because of ortfoignore at %s", path, filepath.Join(ortfoignore.Base(), ".ortfoignore"))
+			return nil
 		}
 
 		for _, expr := range DynamicPathExpressions(entry.Name()) {
