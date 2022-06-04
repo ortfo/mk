@@ -178,7 +178,7 @@ func BuildAll(in string) (built []string, err error) {
 			return nil
 		}
 
-		for _, expr := range DynamicPathExpressions(entry.Name()) {
+		for _, expr := range DynamicPathExpressions(path) {
 			switch expr {
 			case "work":
 				built = append(built, BuildWorkPages(path)...)
