@@ -83,6 +83,10 @@ func DynamicPathExpressions(path string) (expressions []string) {
 func EvaluateDynamicPath(h *Hydration, path string) (string, error) {
 	evaluatedParts := make([]string, 0)
 	parts := strings.Split(path, string(filepath.Separator))
+	leadingSlash := ""
+	if strings.HasPrefix(path, string(filepath.Separator)) {
+		leadingSlash = string(filepath.Separator)
+	}
 	for i, part := range parts {
 		var evaluatedPart string
 		extension := ""
@@ -109,7 +113,7 @@ func EvaluateDynamicPath(h *Hydration, path string) (string, error) {
 		}
 		evaluatedParts = append(evaluatedParts, evaluatedPart)
 	}
-	return filepath.Join(evaluatedParts...), nil
+	return leadingSlash + filepath.Join(evaluatedParts...), nil
 }
 
 // GetDistFilepath evaluates dynamic paths and replaces src/ with dist/.
