@@ -115,7 +115,7 @@ func ToBuildTotalCount(in string) (count int) {
 		if err != nil {
 			return err
 		}
-		if ortfoignore != nil  && ortfoignore.Ignore(path) {
+		if ortfoignore != nil && ortfoignore.Ignore(path) {
 			LogDebug("ignoring %s because of ortfoignore at %s", path, filepath.Join(ortfoignore.Base(), ".ortfoignore"))
 			return nil
 		}
@@ -170,7 +170,7 @@ func BuildAll(in string) (built []string, err error) {
 		if err != nil {
 			return err
 		}
-		if ortfoignore != nil  && ortfoignore.Ignore(path) {
+		if ortfoignore != nil && ortfoignore.Ignore(path) {
 			LogDebug("ignoring %s because of ortfoignore at %s", path, filepath.Join(ortfoignore.Base(), ".ortfoignore"))
 			return nil
 		}

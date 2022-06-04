@@ -2,9 +2,9 @@ package ortfomk
 
 import (
 	"errors"
+	"github.com/denormal/go-gitignore"
 	"os"
 	"path/filepath"
-	"github.com/denormal/go-gitignore"
 )
 
 // closestOrtfoignoreFile parses the .ortfoignore closest to the currentDirectory.
@@ -16,7 +16,7 @@ func closestOrtfoignore(currentDirectory string) (gitignore.GitIgnore, error) {
 	if err != nil {
 		return nil, errors.New("attempted to find ortfoignore from outside the templates directory")
 	}
-	checkParent := relativeToTemplates != "." 
+	checkParent := relativeToTemplates != "."
 	ortfoignorePath := filepath.Join(currentDirectory, ".ortfoignore")
 	_, err = os.Stat(ortfoignorePath)
 	if os.IsNotExist(err) {
