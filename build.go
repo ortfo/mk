@@ -12,6 +12,7 @@ import (
 	exprVM "github.com/antonmedv/expr/vm"
 	"github.com/stoewer/go-strcase"
 	"gopkg.in/yaml.v3"
+	v8 "rogchap.com/v8go"
 )
 
 var g GlobalData = GlobalData{}
@@ -209,7 +210,7 @@ func BuildTechPages(using string) (built []string) {
 		LogError("couldn't read the template: %s", err)
 		return
 	}
-
+	javascriptRuntime := v8.NewIsolate()
 	compiledTemplate, err := CompileTemplate(using, templateContent)
 	if err != nil {
 		LogError("could build technology pages’ template: %s", err)
@@ -217,9 +218,10 @@ func BuildTechPages(using string) (built []string) {
 	}
 	for _, tech := range g.Technologies {
 		SetCurrentObjectID(tech.URLName)
-		built = append(built, BuildPage(using, compiledTemplate, &Hydration{tech: tech})...)
+		built = append(built, BuildPage(javascriptRuntime, using, compiledTemplate, &Hydration{tech: tech})...)
 		SetCurrentObjectID("")
 	}
+	javascriptRuntime.Dispose()
 	return
 }
 
@@ -231,6 +233,7 @@ func BuildSitePages(using string) (built []string) {
 		return
 	}
 
+	javascriptRuntime := v8.NewIsolate()
 	compiledTemplate, err := CompileTemplate(using, templateContent)
 	if err != nil {
 		LogError("could build site pages’ template: %s", err)
@@ -238,9 +241,10 @@ func BuildSitePages(using string) (built []string) {
 	}
 	for _, site := range g.Sites {
 		SetCurrentObjectID(site.Name)
-		built = append(built, BuildPage(using, compiledTemplate, &Hydration{site: site})...)
+		built = append(built, BuildPage(javascriptRuntime, using, compiledTemplate, &Hydration{site: site})...)
 		SetCurrentObjectID("")
 	}
+	javascriptRuntime.Dispose()
 	return
 }
 
@@ -252,6 +256,7 @@ func BuildTagPages(using string) (built []string) {
 		return
 	}
 
+	javascriptRuntime := v8.NewIsolate()
 	compiledTemplate, err := CompileTemplate(using, templateContent)
 	if err != nil {
 		LogError("could build tag pages’ template: %s", err)
@@ -259,9 +264,10 @@ func BuildTagPages(using string) (built []string) {
 	}
 	for _, tag := range g.Tags {
 		SetCurrentObjectID(tag.Singular)
-		built = append(built, BuildPage(using, compiledTemplate, &Hydration{tag: tag})...)
+		built = append(built, BuildPage(javascriptRuntime, using, compiledTemplate, &Hydration{tag: tag})...)
 		SetCurrentObjectID("")
 	}
+	javascriptRuntime.Dispose()
 	return
 }
 
@@ -272,6 +278,7 @@ func BuildWorkPages(using string) (built []string) {
 		LogError("coudln't read template: %s", err)
 	}
 
+	javascriptRuntime := v8.NewIsolate()
 	compiledTemplate, err := CompileTemplate(using, templateContent)
 	if err != nil {
 		LogError("couldn't build work pages’ template: %s", err)
@@ -279,9 +286,10 @@ func BuildWorkPages(using string) (built []string) {
 	}
 	for _, work := range g.Works {
 		SetCurrentObjectID(work.ID)
-		built = append(built, BuildPage(using, compiledTemplate, &Hydration{work: work})...)
+		built = append(built, BuildPage(javascriptRuntime, using, compiledTemplate, &Hydration{work: work})...)
 		SetCurrentObjectID("")
 	}
+	javascriptRuntime.Dispose()
 	return
 }
 
@@ -295,6 +303,7 @@ func BuildRegularPage(path string) (built []string) {
 		return
 	}
 
+	javascriptRuntime := v8.NewIsolate()
 	compiledTemplate, err := CompileTemplate(path, templateContent)
 	if err != nil {
 		LogError("could not build the page’s template: %s", err)
@@ -302,11 +311,13 @@ func BuildRegularPage(path string) (built []string) {
 	}
 	LogDebug("finished compiling")
 
-	return BuildPage(path, compiledTemplate, &Hydration{})
+	built = BuildPage(javascriptRuntime, path, compiledTemplate, &Hydration{})
+	javascriptRuntime.Dispose()
+	return built
 }
 
 // BuildPage builds a single page
-func BuildPage(pageName string, compiledTemplate []byte, hydration *Hydration) (built []string) {
+func BuildPage(javascriptRuntime *v8.Isolate, pageName string, compiledTemplate []byte, hydration *Hydration) (built []string) {
 	// Add additional data to hydration
 	for _, language := range []string{"fr", "en"} {
 		hydration.language = language
@@ -326,6 +337,7 @@ func BuildPage(pageName string, compiledTemplate []byte, hydration *Hydration) (
 			OutFile:  outPath,
 		})
 		content, err := RunTemplate(
+			javascriptRuntime,
 			hydration,
 			pageName,
 			compiledTemplate,

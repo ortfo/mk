@@ -115,7 +115,7 @@ func CompileTemplate(templateName string, templateContent []byte) ([]byte, error
 }
 
 // RunTemplate parses a given (HTML) template.
-func RunTemplate(hydration *Hydration, templateName string, compiledTemplate []byte) (string, error) {
+func RunTemplate(javascriptRuntime *v8.Isolate, hydration *Hydration, templateName string, compiledTemplate []byte) (string, error) {
 	compiledJSFile, err := GenerateJSFile(hydration, templateName, string(compiledTemplate))
 	if os.Getenv("DEBUG") == "1" {
 		os.WriteFile(templateName+"."+hydration.Name()+".js", []byte(compiledJSFile), 0644)
@@ -125,7 +125,7 @@ func RunTemplate(hydration *Hydration, templateName string, compiledTemplate []b
 	}
 
 	LogDebug("executing template")
-	ctx := v8.NewContext()
+	ctx := v8.NewContext(javascriptRuntime)
 	jsValue, err := ctx.RunScript(compiledJSFile, templateName+".js")
 	LogDebug("finished executing")
 	if err, ok := err.(*v8.JSError); ok {
