@@ -105,9 +105,6 @@ func ComputeTotalToBuildCount() {
 func ToBuildTotalCount(in string) (count int) {
 	err := filepath.WalkDir(in, func(path string, entry fs.DirEntry, err error) error {
 		currentDirectory := filepath.Dir(path)
-		if strings.Contains(path, "/mixins/") {
-			return nil
-		}
 		if !(strings.HasSuffix(path, ".pug") || strings.HasSuffix(path, ".html")) {
 			return nil
 		}
