@@ -150,7 +150,7 @@ function ThumbnailSource(work, resolution) {
 }
 
 function availableResolutionsForThumbnail(work, key) {
-  return Object.keys(work.Metadata.Thumbnails[key]).map(parseFloat)
+  return Object.keys(work?.Metadata?.Thumbnails?.[key] || {}).map(parseFloat)
 }
 
 function ThumbnailSourcesSet(work) {
