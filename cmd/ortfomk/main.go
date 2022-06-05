@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 
 	"github.com/docopt/docopt-go"
 	ortfomk "github.com/ortfo/mk"
@@ -81,6 +82,14 @@ func main() {
 		AdditionalData: additionalData,
 	})
 
+	if os.Getenv("DEBUG") == "1" {
+		cpuProfileFile, err := os.Create("ortfomk.pprof")
+		if err != nil {
+		panic(err)
+		}
+		pprof.StartCPUProfile(cpuProfileFile)
+		defer pprof.StopCPUProfile()
+	}
 	//
 	// Preparing dist directory
 	//
