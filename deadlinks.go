@@ -16,13 +16,14 @@ func IsLinkDead(link string) (bool, error) {
 		return false, fmt.Errorf("while opening %s: %w", link, err)
 	}
 
+	LogDebug("got response %d for %s", resp.StatusCode, link)
 	return resp.StatusCode >= 400, nil
 }
 
 // AllLinks returns set of all HTTP links in a given document (so no duplicates).
 func AllLinks(document string) (links mapset.Set) {
 	links = mapset.NewSet()
-	linksSlice := regexp.MustCompile(`\bhttps?://\S+\b`).FindAllString(document, -1)
+	linksSlice := regexp.MustCompile(`\bhttps?://[-\pL0-9._~:/?#\[\]@!$&'()*+,;%=]+`).FindAllString(document, -1)
 	if len(linksSlice) == 0 {
 		return
 	}
