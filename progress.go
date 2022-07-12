@@ -18,6 +18,7 @@ const (
 	StepLoadWorks         BuildStep = "load works"
 	StepLoadTechnologies  BuildStep = "load technologies"
 	StepLoadExternalSites BuildStep = "load external sites"
+	StepLoadCollections   BuildStep = "load collections"
 	StepLoadTags          BuildStep = "load tags"
 	StepLoadTranslations  BuildStep = "load translations"
 )

@@ -34,10 +34,30 @@ type tagFrozen struct {
 	URLName string
 }
 
+type collectionOneLangFrozen struct {
+	CollectionOneLang
+
+	// Frozen methods
+	Works []workOneLangFrozen
+}
+
 func (t Tag) Freeze() tagFrozen {
 	return tagFrozen{
 		Tag:     t,
 		URLName: t.URLName(),
+	}
+}
+
+func (c CollectionOneLang) Freeze() collectionOneLangFrozen {
+	worksOneLang := c.Works
+	worksOneLangFrozen := make([]workOneLangFrozen, len(worksOneLang))
+	for _, work := range worksOneLang {
+		worksOneLangFrozen = append(worksOneLangFrozen, work.Freeze())
+	}
+
+	return collectionOneLangFrozen{
+		CollectionOneLang: c,
+		Works:             worksOneLangFrozen,
 	}
 }
 
@@ -111,6 +131,13 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 			}
 			return works
 		}(),
+		"all_collections": func() []collectionOneLangFrozen {
+			frozenCollections := make([]collectionOneLangFrozen, len(g.Collections))
+			for _, collection := range g.Collections {
+				frozenCollections = append(frozenCollections, collection.InLanguage(hydration.language).Freeze())
+			}
+			return frozenCollections
+		}(),
 		"_translations": func() map[string]string {
 			out := make(map[string]string)
 			for _, message := range g.Translations[hydration.language].poFile.Messages {
@@ -136,6 +163,10 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 	}
 	if hydration.IsSite() {
 		dataToInject["CurrentSite"] = hydration.site
+	}
+	if hydration.IsCollection() {
+		collection := hydration.collection.InLanguage(hydration.language)
+		dataToInject["CurrentCollection"] = collection.Freeze()
 	}
 	if hydration.IsWork() {
 		work := hydration.work.InLanguage(hydration.language)

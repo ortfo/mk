@@ -18,11 +18,12 @@ import (
 
 // Hydration represents a Tag, Technology or Work
 type Hydration struct {
-	language string
-	tag      Tag
-	tech     Technology
-	work     Work
-	site     ExternalSite
+	language   string
+	tag        Tag
+	tech       Technology
+	work       Work
+	site       ExternalSite
+	collection Collection
 }
 
 // IsWork returns true if the current hydration contains a Work
@@ -42,6 +43,10 @@ func (h *Hydration) IsTech() bool {
 
 func (h *Hydration) IsSite() bool {
 	return h.site.URL != ""
+}
+
+func (h *Hydration) IsCollection() bool {
+	return h.collection.ID != ""
 }
 
 // Name returns the identifier of the object in the hydration,

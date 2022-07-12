@@ -100,6 +100,8 @@ func UpdateSpinner() {
 		message = fmt.Sprintf("Loading translations from [magenta]%s[reset]", cwdRel(g.Progress.File))
 	case StepLoadWorks:
 		message = fmt.Sprintf("Loading works from database [magenta]%s[reset]", cwdRel(g.Progress.File))
+	case StepLoadCollections:
+		message = fmt.Sprintf("Loading work collections from [magenta]%s[reset]", cwdRel(g.Progress.File))
 	default:
 		message = string(g.Progress.Step)
 	}
@@ -112,6 +114,8 @@ func UpdateSpinner() {
 		currentObjectType = "tech"
 	} else if strings.Contains(g.Progress.File, ":site") {
 		currentObjectType = "site"
+	} else if strings.Contains(g.Progress.File, ":collection") {
+		currentObjectType = "collection"
 	} else if g.Progress.Step == StepBuildPage || g.Progress.Step == StepGeneratePDF {
 		currentObjectType = "page"
 	}

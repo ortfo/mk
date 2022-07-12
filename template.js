@@ -272,3 +272,11 @@ function IsColorBright(hexColor) {
   const brightness = (c_r * 299 + c_g * 587 + c_b * 114) / 1000
   return brightness > 155
 }
+
+function IsWorkInCollection(work, collection) {
+  return (collection.Works || []).map(w => w.ID).includes(work.ID)
+}
+
+function CollectionsOfWork(work) {
+  return all_collections.filter(c => IsWorkInCollection(work, c))
+}

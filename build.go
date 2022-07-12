@@ -17,7 +17,7 @@ import (
 )
 
 var g GlobalData = GlobalData{}
-var DynamicPathExpressionsCahe = map[string]*exprVM.Program{}
+var DynamicPathExpressionsCache = map[string]*exprVM.Program{}
 
 type Translations map[string]*TranslationsOneLang
 
@@ -140,6 +140,8 @@ func ToBuildTotalCount(in string) (count int) {
 				countForPath *= len(g.Technologies)
 			case "site":
 				countForPath *= len(g.Sites)
+			case "collection":
+				countForPath *= len(g.Collections)
 			default:
 				if regexp.MustCompile(`^lang(uage)?\s+is\s+.+$`).MatchString(expression) {
 					countForPath *= 1 // bruh moment
@@ -199,6 +201,8 @@ func BuildAll(in string, workersCount int) (built []string, httpLinks map[string
 						newlyBuilt = append(newlyBuilt, BuildTechPages(path)...)
 					case "site":
 						newlyBuilt = append(newlyBuilt, BuildSitePages(path)...)
+					case "collection":
+						newlyBuilt = append(newlyBuilt, BuildCollectionPages(path)...)
 					}
 				}
 
@@ -310,6 +314,29 @@ func BuildTagPages(using string) (built []string) {
 	for _, tag := range g.Tags {
 		SetCurrentObjectID(tag.Singular)
 		built = append(built, BuildPage(javascriptRuntime, using, compiledTemplate, &Hydration{tag: tag})...)
+		SetCurrentObjectID("")
+	}
+	javascriptRuntime.Dispose()
+	return
+}
+
+// BuikdCollectionPages builds all collection pages using the given filename
+func BuildCollectionPages(using string) (built []string) {
+	templateContent, err := os.ReadFile(using)
+	if err != nil {
+		LogError("couldn't read the template: %s", err)
+		return
+	}
+
+	javascriptRuntime := v8.NewIsolate()
+	compiledTemplate, err := CompileTemplate(using, templateContent)
+	if err != nil {
+		LogError("could build tag pages’ template: %s", err)
+		return
+	}
+	for _, collection := range g.Collections {
+		SetCurrentObjectID(collection.ID)
+		built = append(built, BuildPage(javascriptRuntime, using, compiledTemplate, &Hydration{collection: collection})...)
 		SetCurrentObjectID("")
 	}
 	javascriptRuntime.Dispose()

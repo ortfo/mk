@@ -20,12 +20,12 @@ func EvaluateDynamicPathExpression(h *Hydration, expression string) (stringResul
 		expression = fmt.Sprintf(`%s == %s ? %s : ""`, matches[1], matches[2], matches[2])
 	}
 	var compiledExpr *exprVM.Program
-	if cached, ok := DynamicPathExpressionsCahe[expression]; ok {
+	if cached, ok := DynamicPathExpressionsCache[expression]; ok {
 		compiledExpr = cached
 	} else {
 		LogDebug("Compiling dynamic path expression %q", expression)
 		compiledExpr, err = expr.Compile(expression)
-		DynamicPathExpressionsCahe[expression] = compiledExpr
+		DynamicPathExpressionsCache[expression] = compiledExpr
 	}
 	if err != nil {
 		return "", false, fmt.Errorf("invalid dynamic path expression %q: %w", expression, err)
@@ -37,6 +37,7 @@ func EvaluateDynamicPathExpression(h *Hydration, expression string) (stringResul
 		"technology": h.tech,
 		"site":       h.site,
 		"language":   h.language,
+		"collection": h.collection,
 		"lang":       h.language,
 	})
 	if err != nil {
