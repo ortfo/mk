@@ -160,7 +160,7 @@ func (t TranslationsOneLang) TranslateHydrated(content string) string {
 		LogError("An error occured while parsing the hydrated HTML for translation: %s", err)
 		return ""
 	}
-	return t.Translate(parsedContent)
+	return Translate(t.language, parsedContent)
 }
 
 // NameOfTemplate returns the name given to a template that is applied to multiple objects, e.g. :work.pug<portfolio>.

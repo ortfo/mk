@@ -46,24 +46,25 @@ func (t TranslationsOneLang) WriteUnusedMsgIds() error {
 }
 
 // TranslateToLanguage translates the given html node to french or english, removing translation-related attributes
-func (t *TranslationsOneLang) Translate(root *html.Node) string {
+func Translate(language string, root *html.Node) string {
 	// Open files
 	doc := goquery.NewDocumentFromNode(root)
 	doc.Find("i18n, [i18n]").Each(func(_ int, element *goquery.Selection) {
 		element.RemoveAttr("i18n")
 		msgContext, _ := element.Attr("i18n-context")
 		element.RemoveAttr("i18n-context")
-		if t.language != SourceLanguage {
+		if language != SourceLanguage {
 			innerHTML, _ := element.Html()
 			innerHTML = html.UnescapeString(innerHTML)
 			innerHTML = strings.TrimSpace(innerHTML)
 			if innerHTML == "" {
 				return
 			}
-			if translated := t.GetTranslation(innerHTML); translated != "" {
+			if translated := g.Translations[language].GetTranslation(innerHTML); translated != "" {
 				element.SetHtml(translated)
 			} else {
-				t.missingMessages = append(t.missingMessages, po.Message{
+				LogDebug("adding missing message %q", innerHTML)
+				g.Translations[language].missingMessages = append(g.Translations[language].missingMessages, po.Message{
 					MsgId:      innerHTML,
 					MsgContext: msgContext,
 				})
@@ -90,7 +91,7 @@ func LoadTranslations() (Translations, error) {
 			poFile = &po.File{}
 		}
 
-		translations[languageCode] = TranslationsOneLang{
+		translations[languageCode] = &TranslationsOneLang{
 			poFile:          *poFile,
 			seenMsgIds:      mapset.NewSet(),
 			missingMessages: make([]po.Message, 0),
@@ -104,7 +105,19 @@ func LoadTranslations() (Translations, error) {
 // It removes duplicate msgids beforehand
 func (t TranslationsOneLang) SavePO() {
 	// TODO: sort file after saving, (po.File).Save is not stable... (creates unecessary diffs in git)
+	// Remove unused messages with empty msgstrs
+	uselessRemoved := make([]po.Message, 0)
+	for _, msg := range t.poFile.Messages {
+		if !t.seenMsgIds.Contains(msg.MsgId) && msg.MsgStr == "" {
+			t.seenMsgIds.Remove(msg.MsgId)
+			continue
+		}
+		uselessRemoved = append(uselessRemoved, msg)
+	}
+	t.poFile.Messages = uselessRemoved
+	// Add missing msgids
 	t.poFile.Messages = append(t.poFile.Messages, t.missingMessages...)
+	// Remove duplicate msgids
 	dedupedMessages := make([]po.Message, 0)
 	for _, msg := range t.poFile.Messages {
 		var isDupe bool
@@ -118,16 +131,6 @@ func (t TranslationsOneLang) SavePO() {
 		}
 	}
 	t.poFile.Messages = dedupedMessages
-	// Remove unused messages with empty msgstrs
-	uselessRemoved := make([]po.Message, 0)
-	for _, msg := range t.poFile.Messages {
-		if !t.seenMsgIds.Contains(msg.MsgId) && msg.MsgStr == "" {
-			t.seenMsgIds.Remove(msg.MsgId)
-			continue
-		}
-		uselessRemoved = append(uselessRemoved, msg)
-	}
-	t.poFile.Messages = uselessRemoved
 	// Sort them to guarantee a stable write
 	sort.Sort(ByMsgId(t.poFile.Messages))
 	t.poFile.Save(fmt.Sprintf("i18n/%s.po", t.language))
@@ -150,7 +153,7 @@ func (b ByMsgId) Swap(i, j int) {
 
 // GetTranslation returns the msgstr corresponding to msgid from the .po file
 // If not found, it returns the empty string
-func (t *TranslationsOneLang) GetTranslation(msgid string) string {
+func (t TranslationsOneLang) GetTranslation(msgid string) string {
 	t.seenMsgIds.Add(msgid)
 	for _, message := range t.poFile.Messages {
 		if message.MsgId == msgid && message.MsgStr != "" {

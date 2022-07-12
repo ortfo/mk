@@ -18,7 +18,7 @@ import (
 var g GlobalData = GlobalData{}
 var DynamicPathExpressionsCahe = map[string]*exprVM.Program{}
 
-type Translations map[string]TranslationsOneLang
+type Translations map[string]*TranslationsOneLang
 
 // GlobalData holds data that is used throughout the whole build process
 type GlobalData struct {
@@ -67,7 +67,7 @@ func SetGlobalData(data GlobalData) {
 	g = data
 }
 
-func SetTranslationsOnGlobalData(translations map[string]TranslationsOneLang) {
+func SetTranslationsOnGlobalData(translations map[string]*TranslationsOneLang) {
 	g.Translations = translations
 }
 
