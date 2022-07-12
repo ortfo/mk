@@ -54,6 +54,8 @@ type ProgressDetails struct {
 
 // Status updates the current progress and writes the progress to a file if --write-progress is set.
 func Status(step BuildStep, details ProgressDetails) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	g.Progress.Step = step
 	g.Progress.Resolution = details.Resolution
 	g.Progress.File = details.File
@@ -71,6 +73,8 @@ func Status(step BuildStep, details ProgressDetails) {
 
 // IncrementProgress increments the number of processed works and writes the progress to a file if --write-progress is set.
 func IncrementProgress() error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	g.Progress.Current++
 
 	UpdateSpinner()
@@ -125,6 +129,9 @@ func (g *GlobalData) ProgressFileData() ProgressFile {
 
 // SetCurrentObjectID sets the current object ID and updates the spinner.
 func SetCurrentObjectID(objectID string) {
+	g.mu.Lock()
 	g.CurrentObjectID = objectID
+	g.mu.Unlock()
+	// UpdateSpinner is thread-safe, as yacspin has its own mutex.
 	UpdateSpinner()
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/pprof"
+	"strings"
+	"sync"
 
 	"github.com/docopt/docopt-go"
 	ortfomk "github.com/ortfo/mk"
@@ -79,13 +81,13 @@ func main() {
 		OutputDirectory:    outputDirectory,
 		TemplatesDirectory: templatesDirectory,
 		HTTPLinks:          make(map[string][]string),
-		AdditionalData: additionalData,
+		AdditionalData:     additionalData,
 	})
 
 	if os.Getenv("DEBUG") == "1" {
 		cpuProfileFile, err := os.Create("ortfomk.pprof")
 		if err != nil {
-		panic(err)
+			panic(err)
 		}
 		pprof.StartCPUProfile(cpuProfileFile)
 		defer pprof.StopCPUProfile()
@@ -112,18 +114,19 @@ func main() {
 	ortfomk.SetTranslationsOnGlobalData(translations)
 	ortfomk.SetDatabaseOnGlobalData(db)
 	ortfomk.ComputeTotalToBuildCount()
+	var httpLinks map[string][]string
 	//
 	// Watch mode
 	//
 	if val, _ := args.Bool("develop"); val {
-		_, err := ortfomk.BuildAll(templatesDirectory)
+		_, httpLinks, err = ortfomk.BuildAll(templatesDirectory, 0)
 		if err != nil {
 			ortfomk.LogError("During initial build: %s", err)
 		}
 
 		ortfomk.StartWatcher(db)
 	} else {
-		_, err := ortfomk.BuildAll(templatesDirectory)
+		_, httpLinks, err = ortfomk.BuildAll(templatesDirectory, 0)
 
 		if err != nil {
 			ortfomk.LogError("While building: %s", err)
@@ -143,20 +146,38 @@ func main() {
 		if os.Getenv("DEADLINKS_CHECK") != "0" {
 			ortfomk.Status(ortfomk.StepDeadLinks, ortfomk.ProgressDetails{})
 			noneDead := true
-			// FIXME
-			// for link, sites := range g.HTTPLinks {
-			// 	dead, err := ortfomk.IsLinkDead(link)
-			// 	if err != nil {
-			// 		ortfomk.LogError("could not check for dead links: %s", err)
-			// 	}
-			// 	if !dead {
-			// 		continue
-			// 	}
+			channel := make(chan string)
+			var wg sync.WaitGroup
+			workersCount := len(httpLinks)
+			wg.Add(workersCount)
 
-			// 	noneDead = false
-			// 	ortfomk.LogInfo("- %s (from %s),", link, strings.Join(sites, ", "))
+			for i := 0; i < workersCount; i++ {
+				go func(c chan string) {
+					for {
+						link, more := <-c
+						if !more {
+							wg.Done()
+							return
+						}
 
-			// }
+						dead, err := ortfomk.IsLinkDead(link)
+						if err != nil {
+							ortfomk.LogError("could not check for dead link %q: %s", link, err)
+						}
+						if dead {
+							noneDead = false
+							ortfomk.LogInfo("- %s (from %s)", link, strings.Join(httpLinks[link], ", "))
+						}
+					}
+				}(channel)
+			}
+
+			for link, _ := range httpLinks {
+				channel <- link
+			}
+
+			close(channel)
+			wg.Wait()
 
 			if noneDead {
 				ortfomk.LogInfo("No dead links found.")

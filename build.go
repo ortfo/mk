@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	exprVM "github.com/antonmedv/expr/vm"
 	"github.com/stoewer/go-strcase"
@@ -22,6 +23,8 @@ type Translations map[string]*TranslationsOneLang
 
 // GlobalData holds data that is used throughout the whole build process
 type GlobalData struct {
+	mu sync.Mutex
+
 	Translations Translations
 	Database
 	// Maps each link to the pages in which they appear
@@ -105,6 +108,9 @@ func ComputeTotalToBuildCount() {
 func ToBuildTotalCount(in string) (count int) {
 	err := filepath.WalkDir(in, func(path string, entry fs.DirEntry, err error) error {
 		currentDirectory := filepath.Dir(path)
+		if strings.Contains(path, "/mixins/") {
+			return nil
+		}
 		if !(strings.HasSuffix(path, ".pug") || strings.HasSuffix(path, ".html")) {
 			return nil
 		}
@@ -152,10 +158,71 @@ func ToBuildTotalCount(in string) (count int) {
 	return
 }
 
-// BuildAll builds all page in the given directory, recursively.
-func BuildAll(in string) (built []string, err error) {
+// BuildAll builds pages from templates found in the given directory in parallel, using the given number of goroutines (workersCount).
+// if workersCount is 0 or less, it is set to the number of page templates to compile.
+func BuildAll(in string, workersCount int) (built []string, httpLinks map[string][]string, err error) {
+	toBuildChannel := make(chan string)
+	httpLinks = g.HTTPLinks
+	LogDebug("scanning for things to build")
+	toBuild, err := ScanAll(in)
+	if err != nil {
+		return built, httpLinks, fmt.Errorf("while scanning templates directory: %w", err)
+	}
+
+	if workersCount <= 0 {
+		workersCount = len(toBuild)
+	}
+
+	var builtMutex sync.Mutex
+	var wg sync.WaitGroup
+	wg.Add(workersCount)
+
+	LogDebug("launching 5 parallel build subroutines")
+	for i := 0; i < workersCount; i++ {
+		go func(toBuildChannel chan string) {
+			for {
+				newlyBuilt := make([]string, 0)
+				path, more := <-toBuildChannel
+
+				if !more {
+					wg.Done()
+					return
+				}
+
+				for _, expr := range DynamicPathExpressions(path) {
+					switch expr {
+					case "work":
+						newlyBuilt = append(newlyBuilt, BuildWorkPages(path)...)
+					case "tag":
+						newlyBuilt = append(newlyBuilt, BuildTagPages(path)...)
+					case "technology":
+						newlyBuilt = append(newlyBuilt, BuildTechPages(path)...)
+					case "site":
+						newlyBuilt = append(newlyBuilt, BuildSitePages(path)...)
+					}
+				}
+
+				newlyBuilt = append(newlyBuilt, BuildRegularPage(path)...)
+				builtMutex.Lock()
+				built = append(built, newlyBuilt...)
+				builtMutex.Unlock()
+			}
+		}(toBuildChannel)
+	}
+
+	LogDebug("starting to fill toBuild channel")
+	for _, path := range toBuild {
+		toBuildChannel <- path
+	}
+	close(toBuildChannel)
+	wg.Wait()
+	return
+}
+
+// ScanAll scans the given directory for paths to build, recursively.
+func ScanAll(in string) (toBuild []string, err error) {
 	err = filepath.WalkDir(in, func(path string, entry fs.DirEntry, err error) error {
-		LogDebug("Walking into %s", path)
+		// LogDebug("Walking into %s", path)
 		currentDirectory := filepath.Dir(path)
 		if strings.Contains(path, "/mixins/") {
 			return nil
@@ -175,26 +242,7 @@ func BuildAll(in string) (built []string, err error) {
 			return nil
 		}
 
-		for _, expr := range DynamicPathExpressions(path) {
-			switch expr {
-			case "work":
-				built = append(built, BuildWorkPages(path)...)
-				return err
-			case "tag":
-				built = append(built, BuildTagPages(path)...)
-				return err
-			case "technology":
-				fallthrough
-			case "tech":
-				built = append(built, BuildTechPages(path)...)
-				return err
-			case "site":
-				built = append(built, BuildSitePages(path)...)
-				return err
-			}
-		}
-
-		built = append(built, BuildRegularPage(path)...)
+		toBuild = append(toBuild, path)
 		return err
 	})
 	return
@@ -324,7 +372,7 @@ func BuildPage(javascriptRuntime *v8.Isolate, pageName string, compiledTemplate 
 			continue
 		}
 		if outPath == "" {
-			LogDebug("Skipped path %s", pageName)
+			// LogDebug("Skipped path %s", pageName)
 			continue
 		}
 
@@ -345,6 +393,7 @@ func BuildPage(javascriptRuntime *v8.Isolate, pageName string, compiledTemplate 
 			continue
 		}
 		content = g.Translations[language].TranslateHydrated(content)
+		g.mu.Lock()
 		for _, link_ := range AllLinks(content).ToSlice() {
 			link := link_.(string)
 			if _, exists := g.HTTPLinks[link]; exists {
@@ -352,6 +401,7 @@ func BuildPage(javascriptRuntime *v8.Isolate, pageName string, compiledTemplate 
 			}
 			g.HTTPLinks[link] = []string{outPath}
 		}
+		g.mu.Unlock()
 		os.MkdirAll(filepath.Dir(outPath), 0777)
 		LogDebug("outputting to %s", outPath)
 		if strings.HasSuffix(outPath, ".pdf") {
