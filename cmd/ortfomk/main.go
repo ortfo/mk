@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"runtime/pprof"
 	"strings"
 	"sync"
@@ -85,10 +86,11 @@ func main() {
 	})
 
 	if os.Getenv("DEBUG") == "1" {
-		cpuProfileFile, err := os.Create("ortfomk.pprof")
+		cpuProfileFile, err := os.Create("ortfomk_cpu.pprof")
 		if err != nil {
 			panic(err)
 		}
+		defer cpuProfileFile.Close()
 		pprof.StartCPUProfile(cpuProfileFile)
 		defer pprof.StopCPUProfile()
 	}
@@ -187,6 +189,18 @@ func main() {
 		}
 
 		ortfomk.CoolDown()
+	}
+
+	if os.Getenv("DEBUG") == "1" {
+		heapProfileFile, err := os.Create("ortfomk_heap.pprof")
+		if err != nil {
+			panic(err)
+		}
+		defer heapProfileFile.Close()
+		runtime.GC()
+		if err := pprof.WriteHeapProfile(heapProfileFile); err != nil {
+			ortfomk.LogFatal("couldn't write heap profile: %s", err)
+		}
 	}
 }
 
