@@ -19,6 +19,9 @@ func EvaluateDynamicPathExpression(h *Hydration, expression string) (stringResul
 	if matches := regexp.MustCompile(`^(\w+)\s+is\s+(.+)$`).FindStringSubmatch(expression); matches != nil {
 		expression = fmt.Sprintf(`%s == %s ? %s : ""`, matches[1], matches[2], matches[2])
 	}
+	if matches := regexp.MustCompile(`^(\w+)\s+except\s+(.+)$`).FindStringSubmatch(expression); matches != nil {
+		expression = fmt.Sprintf(`%s != %s ? %s : ""`, matches[1], matches[2], matches[2])
+	}
 	var compiledExpr *exprVM.Program
 	if cached, ok := DynamicPathExpressionsCache[expression]; ok {
 		compiledExpr = cached
