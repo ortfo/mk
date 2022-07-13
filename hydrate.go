@@ -55,6 +55,9 @@ func (h *Hydration) Name() string {
 	if h.IsWork() {
 		return h.work.ID + "@" + h.language
 	}
+	if h.IsCollection() {
+		return h.collection.ID + "@" + h.language
+	}
 	if h.IsTag() {
 		return h.tag.URLName() + "@" + h.language
 	}
