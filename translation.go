@@ -11,7 +11,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	po "github.com/chai2010/gettext-go/po"
 	mapset "github.com/deckarep/golang-set"
-	"github.com/yosssi/gohtml"
 	"golang.org/x/net/html"
 )
 
@@ -74,7 +73,7 @@ func Translate(language string, root *html.Node) string {
 	htmlString, _ := doc.Html()
 	htmlString = strings.ReplaceAll(htmlString, "<i18n>", "")
 	htmlString = strings.ReplaceAll(htmlString, "</i18n>", "")
-	return gohtml.Format(htmlString)
+	return htmlString
 }
 
 // LoadTranslations reads from i18n/fr.po to load translations
