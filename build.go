@@ -102,7 +102,9 @@ func LoadAdditionalData(filesToLoad []string) (additionalData map[string]interfa
 }
 
 func ComputeTotalToBuildCount() {
+	g.mu.Lock()
 	g.Progress.Total = ToBuildTotalCount(g.TemplatesDirectory)
+	g.mu.Unlock()
 }
 
 func ToBuildTotalCount(in string) (count int) {
