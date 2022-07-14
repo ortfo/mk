@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 
@@ -128,31 +127,69 @@ func ToBuildTotalCount(in string) (count int) {
 			return nil
 		}
 		LogDebug("walking into %s", path)
-		countForPath := 1
-		for _, expression := range DynamicPathExpressions(path) {
-			LogDebug("Adding expression %s to count", expression)
-			switch expression {
-			case "work":
-				countForPath *= len(g.Works)
-			case "tag":
-				countForPath *= len(g.Tags)
-			case "technology":
-				fallthrough
-			case "tech":
-				countForPath *= len(g.Technologies)
-			case "site":
-				countForPath *= len(g.Sites)
-			case "collection":
-				countForPath *= len(g.Collections)
-			default:
-				if regexp.MustCompile(`^lang(uage)?\s+is\s+.+$`).MatchString(expression) {
-					countForPath *= 1 // bruh moment
-				} else if expression == "language" || expression == "lang" {
-					countForPath *= len([]string{"fr", "en"})
+		// Collect variables the path depends upon
+		pathVariables := make([]string, 0)
+		for _, expr := range DynamicPathExpressions(path) {
+			variables, err := VariablesOfExpression(expr)
+			if err != nil {
+				return fmt.Errorf("couldn't extract variables of expression %q: %w", expr, err)
+			}
+			pathVariables = append(pathVariables, variables...)
+		}
+		pathVariables = deduplicate(pathVariables)
+
+		if len(excluding(pathVariables, "language")) > 0 {
+			for _, variable := range pathVariables {
+				switch variable {
+				case "work":
+					for _, lang := range []string{"fr", "en"} {
+						for _, work := range g.Works {
+							if distPath, err := (&Hydration{language: lang, work: work}).GetDistFilepath(path); distPath != "" && err == nil {
+								count += 1
+							}
+						}
+					}
+				case "tag":
+					for _, lang := range []string{"fr", "en"} {
+						for _, tag := range g.Tags {
+							if distPath, err := (&Hydration{language: lang, tag: tag}).GetDistFilepath(path); distPath != "" && err == nil {
+								count += 1
+							}
+						}
+					}
+				case "technology":
+					for _, lang := range []string{"fr", "en"} {
+						for _, tech := range g.Technologies {
+							if distPath, err := (&Hydration{language: lang, tech: tech}).GetDistFilepath(path); distPath != "" && err == nil {
+								count += 1
+							}
+						}
+					}
+				case "site":
+					for _, lang := range []string{"fr", "en"} {
+						for _, site := range g.Sites {
+							if distPath, err := (&Hydration{language: lang, site: site}).GetDistFilepath(path); distPath != "" && err == nil {
+								count += 1
+							}
+						}
+					}
+				case "collection":
+					for _, lang := range []string{"fr", "en"} {
+						for _, collection := range g.Collections {
+							if distPath, err := (&Hydration{language: lang, collection: collection}).GetDistFilepath(path); distPath != "" && err == nil {
+								count += 1
+							}
+						}
+					}
+				}
+			}
+		} else {
+			for _, lang := range []string{"fr", "en"} {
+				if distPath, err := (&Hydration{language: lang}).GetDistFilepath(path); distPath != "" && err == nil {
+					count += 1
 				}
 			}
 		}
-		count += countForPath
 		LogDebug("count is now %d", count)
 		return nil
 	})
