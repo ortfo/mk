@@ -149,3 +149,31 @@ func keys[K comparable, V any](m map[K]V) []K {
 func filepathStem(path string) string {
 	return strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 }
+
+func deduplicate[T comparable](items []T) []T {
+	noDuplicates := make([]T, 0, len(items))
+outer:
+	for _, item := range items {
+		for _, i := range noDuplicates {
+			if i == item {
+				continue outer
+			}
+		}
+		noDuplicates = append(noDuplicates, item)
+	}
+	return noDuplicates
+}
+
+func excluding[T comparable](items []T, excluded ...T) []T {
+	withoutRemoved := make([]T, 0, len(items))
+outer:
+	for _, item := range items {
+		for _, excludedItem := range excluded {
+			if item == excludedItem {
+				continue outer
+			}
+		}
+		withoutRemoved = append(withoutRemoved, item)
+	}
+	return withoutRemoved
+}

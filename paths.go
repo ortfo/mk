@@ -7,22 +7,36 @@ import (
 	"strings"
 
 	"github.com/antonmedv/expr"
+	exprAST "github.com/antonmedv/expr/ast"
+	exprParser "github.com/antonmedv/expr/parser"
 	exprVM "github.com/antonmedv/expr/vm"
 )
+
+// PreprocessDynamicPathExpression expands some custom syntax added on top of regular antonmedv expressions. Output is a valid antonmedv expression.
+// The expansions are the following:
+//
+//		… is …         ->  1 == 2 ? 1 : ""
+//		… except …     ->  1 != 2 ? 1 : ""
+//
+func PreprocessDynamicPathExpression(expression string) string {
+	// Expand "is" assertions syntax
+	if matches := regexp.MustCompile(`^(\w+)\s+is\s+(.+)$`).FindStringSubmatch(expression); matches != nil {
+		expression = fmt.Sprintf(`%s == %s ? %s : ""`, matches[1], matches[2], matches[2])
+	}
+	// Expand "except" assertions syntax
+	if matches := regexp.MustCompile(`^(\w+)\s+except\s+(.+)$`).FindStringSubmatch(expression); matches != nil {
+		expression = fmt.Sprintf(`%s != %s ? %s : ""`, matches[1], matches[2], matches[1])
+	}
+	return expression
+}
 
 // EvaluateDynamicPathExpression evaluates a path expression (that does not contain the leading ":" or the surrounding "[" and "]"
 // and returns the evaluated expression, as a boolean (second return value) if the result is a boolean or as a string (first return value) if
 // the result is anything else (stringifying the type with "%s"). If the result is an empty string, it becomes indistinguishable from a false boolean result.
 // This is within expectations: an empty string, as well as a false boolean, means that this hydration with this path should not be rendered.
 func EvaluateDynamicPathExpression(h *Hydration, expression string) (stringResult string, boolResult bool, err error) {
-	// Expand "is" assertions syntax
-	if matches := regexp.MustCompile(`^(\w+)\s+is\s+(.+)$`).FindStringSubmatch(expression); matches != nil {
-		expression = fmt.Sprintf(`%s == %s ? %s : ""`, matches[1], matches[2], matches[2])
-	}
-	if matches := regexp.MustCompile(`^(\w+)\s+except\s+(.+)$`).FindStringSubmatch(expression); matches != nil {
-		expression = fmt.Sprintf(`%s != %s ? %s : ""`, matches[1], matches[2], matches[2])
-	}
 	var compiledExpr *exprVM.Program
+	expression = PreprocessDynamicPathExpression(expression)
 	if cached, ok := DynamicPathExpressionsCache[expression]; ok {
 		compiledExpr = cached
 	} else {
@@ -66,6 +80,32 @@ func ExtractDynamicPathExpression(path string, extension string) string {
 	} else {
 		return ""
 	}
+}
+
+func VariablesOfExpression(expression string) ([]string, error) {
+	tree, err := exprParser.Parse(PreprocessDynamicPathExpression(expression))
+	if err != nil {
+		return []string{}, fmt.Errorf("while parsing expression: %w", err)
+	}
+
+	visitor := exprVariablesExtractor{}
+
+	exprAST.Walk(&tree.Node, &visitor)
+	return visitor.collected, nil
+}
+
+type exprVariablesExtractor struct {
+	collected []string
+}
+
+func (e *exprVariablesExtractor) Enter(node *exprAST.Node) {
+	if ident, ok := (*node).(*exprAST.IdentifierNode); ok {
+		e.collected = append(e.collected, ident.Value)
+	}
+}
+
+func (e *exprVariablesExtractor) Exit(node *exprAST.Node) {
+	// nothing
 }
 
 // DynamicPathExpressions returns a list of all dynamic path expressions if the given path.

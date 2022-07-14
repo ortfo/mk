@@ -193,22 +193,37 @@ func BuildAll(in string, workersCount int) (built []string, httpLinks map[string
 					return
 				}
 
+				// Collect variables the path depends upon
+				pathVariables := make([]string, 0)
 				for _, expr := range DynamicPathExpressions(path) {
-					switch expr {
-					case "work":
-						newlyBuilt = append(newlyBuilt, BuildWorkPages(path)...)
-					case "tag":
-						newlyBuilt = append(newlyBuilt, BuildTagPages(path)...)
-					case "technology":
-						newlyBuilt = append(newlyBuilt, BuildTechPages(path)...)
-					case "site":
-						newlyBuilt = append(newlyBuilt, BuildSitePages(path)...)
-					case "collection":
-						newlyBuilt = append(newlyBuilt, BuildCollectionPages(path)...)
+					variables, err := VariablesOfExpression(expr)
+					if err != nil {
+						LogError("couldn't extract variables of expression %q: %s", expr, err)
+						return
 					}
+					pathVariables = append(pathVariables, variables...)
+				}
+				pathVariables = deduplicate(pathVariables)
+
+				if len(excluding(pathVariables, "language")) > 0 {
+					for _, variable := range pathVariables {
+						switch variable {
+						case "work":
+							newlyBuilt = append(newlyBuilt, BuildWorkPages(path)...)
+						case "tag":
+							newlyBuilt = append(newlyBuilt, BuildTagPages(path)...)
+						case "technology":
+							newlyBuilt = append(newlyBuilt, BuildTechPages(path)...)
+						case "site":
+							newlyBuilt = append(newlyBuilt, BuildSitePages(path)...)
+						case "collection":
+							newlyBuilt = append(newlyBuilt, BuildCollectionPages(path)...)
+						}
+					}
+				} else {
+					newlyBuilt = append(newlyBuilt, BuildRegularPage(path)...)
 				}
 
-				newlyBuilt = append(newlyBuilt, BuildRegularPage(path)...)
 				builtMutex.Lock()
 				built = append(built, newlyBuilt...)
 				builtMutex.Unlock()
