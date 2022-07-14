@@ -4,11 +4,13 @@ import (
 	"errors"
 	"io/ioutil"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
 	db "github.com/ortfo/db"
+	ortfodb "github.com/ortfo/db"
 )
 
 // WorkOneLang represents a work in a single language: language-dependent items
@@ -218,4 +220,9 @@ func GeneralContentType(media db.Media) string {
 	}
 	return strings.Split(media.ContentType, "/")[0]
 
+}
+
+// MarkdownParagraphToHTML returns the HTML equivalent of the given markdown string, without the outer <p>…</p> tag
+func MarkdownParagraphToHTML(markdown string) string {
+	return regexp.MustCompile(`^(?m)<p>(.+)</p>$`).ReplaceAllString(ortfodb.MarkdownToHTML(markdown), "${1}")
 }

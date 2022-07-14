@@ -76,6 +76,9 @@ func LoadTechnologies(filename string) (technologies []Technology, err error) {
 		return
 	}
 	err = yaml.Unmarshal(raw, &technologies)
+	for idx, tech := range technologies {
+		technologies[idx].Description = MarkdownParagraphToHTML(tech.Description)
+	}
 	return
 }
 
@@ -87,6 +90,9 @@ func LoadExternalSites(filename string) (sites []ExternalSite, err error) {
 		return
 	}
 	err = yaml.Unmarshal(raw, &sites)
+	for idx, site := range sites {
+		sites[idx].Purpose = MarkdownParagraphToHTML(site.Purpose)
+	}
 	return
 }
 
@@ -98,5 +104,8 @@ func LoadTags(filename string) (tags []Tag, err error) {
 		return
 	}
 	err = yaml.Unmarshal(raw, &tags)
+	for idx, tag := range tags {
+		tags[idx].Description = MarkdownParagraphToHTML(tag.Description)
+	}
 	return
 }

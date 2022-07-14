@@ -47,6 +47,11 @@ func LoadCollections(filename string, works []Work, tags []Tag, technologies []T
 	err = yaml.Unmarshal(raw, &collectionsMap)
 	for id, collection := range collectionsMap {
 		collection.ID = id
+		descriptionsHTML := make(map[string]HTMLString)
+		for lang, description := range collection.Description {
+			descriptionsHTML[lang] = MarkdownParagraphToHTML(description)
+		}
+		collection.Description = descriptionsHTML
 		worksInCollection := make([]Work, 0)
 		for _, work := range works {
 			contained, err := collection.InLanguage("-").Contains(work.InLanguage("-"), works, tags, technologies)
