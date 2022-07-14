@@ -16,7 +16,7 @@ import (
 	v8 "rogchap.com/v8go"
 )
 
-var g GlobalData = GlobalData{}
+var g *GlobalData = &GlobalData{}
 var DynamicPathExpressionsCache = map[string]*exprVM.Program{}
 
 type Translations map[string]*TranslationsOneLang
@@ -54,7 +54,7 @@ type Flags struct {
 // WarmUp needs to be run before any building starts.
 // It sets the global data, scans the template directory
 // to determine the total number of pages to build, and starts the spinner.
-func WarmUp(data GlobalData) {
+func WarmUp(data *GlobalData) {
 	g = data
 	g.Spinner = CreateSpinner()
 	g.Spinner.Start()
@@ -66,7 +66,7 @@ func CoolDown() {
 	g.Spinner.Stop()
 }
 
-func SetGlobalData(data GlobalData) {
+func SetGlobalData(data *GlobalData) {
 	g = data
 }
 

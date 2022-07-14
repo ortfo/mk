@@ -77,7 +77,7 @@ func main() {
 	}
 	additionalDataFiles, _ := args["--load"].([]string)
 	additionalData, err := ortfomk.LoadAdditionalData(additionalDataFiles)
-	ortfomk.WarmUp(ortfomk.GlobalData{
+	ortfomk.WarmUp(&ortfomk.GlobalData{
 		Flags:              flags,
 		OutputDirectory:    outputDirectory,
 		TemplatesDirectory: templatesDirectory,
