@@ -1,6 +1,7 @@
 package ortfomk
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -15,6 +16,12 @@ import (
 )
 
 const SourceLanguage = "en"
+
+// This is the ugliest delimiter pair I could come up with. The idea is to prevent conflicts with any potential input.
+const (
+	TranslationStringDelimiterOpen  = "[=[=[={{{"
+	TranslationStringDelimiterClose = "}}}=]=]=]"
+)
 
 // TranslationsOneLang holds both the gettext catalog from the .mo file
 // and a po file object used to update the .po file (e.g. when discovering new translatable strings)
@@ -74,6 +81,42 @@ func Translate(language string, root *html.Node) string {
 	htmlString = strings.ReplaceAll(htmlString, "<i18n>", "")
 	htmlString = strings.ReplaceAll(htmlString, "</i18n>", "")
 	return htmlString
+}
+
+type translationString struct {
+	Value string
+	Args  []interface{}
+}
+
+// TranslateTranslationStrings applies translations to a string containing translation strings as substrings.
+// See TranslationStringDelimiterOpen, TranslationStringDelimiterClose. If those two are respectively [ and ],
+// this function replaces
+//
+//		you have [{value: "%d friends", args: [8]}] online
+//
+// with, given that t.GetTranslation("%d friends") returns "%d amis":
+//
+//		you have 8 amis
+// TODO: use ICU message syntax instead.
+func (t TranslationsOneLang) TranslateTranslationStrings(content string) string {
+	startsAt := strings.Index(content, TranslationStringDelimiterOpen)
+	if startsAt < 0 {
+		return content
+	}
+	endsAt := strings.Index(content, TranslationStringDelimiterClose)
+	if endsAt < 0 {
+		return content
+	}
+	innerJSON := html.UnescapeString(content[startsAt+len(TranslationStringDelimiterOpen) : endsAt])
+	translation := translationString{}
+	err := json.Unmarshal([]byte(innerJSON), &translation)
+	if err != nil {
+		LogFatal("couldn't parse JSON translation string %q: %s", innerJSON, err)
+		panic(err)
+	}
+
+	LogDebug("translating dynamic msgid %s", innerJSON)
+	return content[:startsAt] + fmt.Sprintf(t.GetTranslation(translation.Value), translation.Args...) + t.TranslateTranslationStrings(content[endsAt+len(TranslationStringDelimiterClose):])
 }
 
 // LoadTranslations reads from i18n/fr.po to load translations

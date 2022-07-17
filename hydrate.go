@@ -163,6 +163,7 @@ func lineAndColumn(err *v8.JSError) (line uint64, column uint64) {
 // TranslateHydrated translates an hydrated HTML page, removing i18n tags and attributes
 // and replacing translatable content with their translations
 func (t TranslationsOneLang) TranslateHydrated(content string) string {
+	content = t.TranslateTranslationStrings(content)
 	parsedContent, err := html.Parse(strings.NewReader(content))
 	if err != nil {
 		LogError("An error occured while parsing the hydrated HTML for translation: %s", err)

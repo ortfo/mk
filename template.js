@@ -65,10 +65,13 @@ function Summarize(work, maxWords) {
   }
 }
 
-// TODO real ICU message format handling (right now it's just plain strings)
-function translate(value) {
+function translate_eager(value) {
   // TODO ...[minify(value)] so that formatting whitespace differences doesn't prevent accessing the value
   return _translations[value] || value
+}
+
+function translate(value, ...args) {
+  return TRANSLATION_STRING_DELIMITER_OPEN + JSON.stringify({value, args}) + TRANSLATION_STRING_DELIMITER_CLOSE
 }
 
 function AddOctothorpeIfNeeded(value) {

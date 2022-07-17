@@ -112,7 +112,8 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 	prelude := fmt.Sprintf(`
 		const media = path => %q.replace('<path>', path);
 		const asset = path => %q.replace('<path>', path);
-	`, mediaTemplate, assetsTemplate)
+		const [TRANSLATION_STRING_DELIMITER_OPEN, TRANSLATION_STRING_DELIMITER_CLOSE] = [%q, %q]
+	`, mediaTemplate, assetsTemplate, TranslationStringDelimiterOpen, TranslationStringDelimiterClose)
 
 	dataToInject := map[string]interface{}{
 		"all_tags": func() []tagFrozen {
