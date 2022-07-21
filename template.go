@@ -142,7 +142,7 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 		"_translations": func() map[string]string {
 			out := make(map[string]string)
 			for _, message := range g.Translations[hydration.language].poFile.Messages {
-				out[message.MsgId] = message.MsgStr
+				out[message.MsgId+message.MsgContext] = message.MsgStr
 			}
 			return out
 		}(),

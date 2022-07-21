@@ -81,7 +81,7 @@ func main() {
 		ortfomk.LogFatal("couldn't load data files %v: %s", additionalDataFiles, err)
 		return
 	}
-	
+
 	ortfomk.WarmUp(&ortfomk.GlobalData{
 		Flags:              flags,
 		OutputDirectory:    outputDirectory,
@@ -142,10 +142,10 @@ func main() {
 		for _, lang := range []string{"fr", "en"} {
 			// Save the updated .po file
 			translations[lang].SavePO()
-			// Save list of unused msgids
-			err = translations[lang].WriteUnusedMsgIds()
+			// Save list of unused messages
+			err = translations[lang].WriteUnusedMessages()
 			if err != nil {
-				ortfomk.LogError("While writing unused msgids file: %s", err)
+				ortfomk.LogError("While writing unused message file: %s", err)
 			}
 		}
 

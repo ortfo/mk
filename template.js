@@ -65,13 +65,17 @@ function Summarize(work, maxWords) {
   }
 }
 
-function translate_eager(value) {
+function translate_eager(value, context = "") {
   // TODO ...[minify(value)] so that formatting whitespace differences doesn't prevent accessing the value
-  return _translations[value] || value
+  return _translations[value+context] || value
+}
+
+function translate_context(value, context, ...args) {
+  return TRANSLATION_STRING_DELIMITER_OPEN + JSON.stringify({value, args, context}) + TRANSLATION_STRING_DELIMITER_CLOSE
 }
 
 function translate(value, ...args) {
-  return TRANSLATION_STRING_DELIMITER_OPEN + JSON.stringify({value, args}) + TRANSLATION_STRING_DELIMITER_CLOSE
+  return translate_context(value, "", ...args)
 }
 
 function AddOctothorpeIfNeeded(value) {

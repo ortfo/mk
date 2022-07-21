@@ -374,7 +374,7 @@ func BuildTagPages(using string) (built []string) {
 	return
 }
 
-// BuikdCollectionPages builds all collection pages using the given filename
+// BuildCollectionPages builds all collection pages using the given filename
 func BuildCollectionPages(using string) (built []string) {
 	templateContent, err := os.ReadFile(using)
 	if err != nil {
