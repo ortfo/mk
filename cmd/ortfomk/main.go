@@ -1,13 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/docopt/docopt-go"
 	ortfomk "github.com/ortfo/mk"
@@ -59,7 +60,6 @@ Build Progress:
 func main() {
 	defer func() {
 		if r := recover(); r != nil {
-			showCursor()
 			ortfomk.LogFatal("ortfo/mk crashed… Here's why: %s", r)
 		}
 	}()
@@ -89,6 +89,7 @@ func main() {
 		HTTPLinks:          make(map[string][]string),
 		AdditionalData:     additionalData,
 	})
+	defer ortfomk.CoolDown()
 
 	if os.Getenv("DEBUG") == "1" {
 		cpuProfileFile, err := os.Create("ortfomk_cpu.pprof")
@@ -193,7 +194,6 @@ func main() {
 			}
 		}
 
-		ortfomk.CoolDown()
 	}
 
 	if os.Getenv("DEBUG") == "1" {
@@ -209,7 +209,12 @@ func main() {
 	}
 }
 
-// showCursor is used to make the cursor again without relying on the spinner working, in cases where the program crashes.
-func showCursor() {
-	fmt.Printf("\033[?25h")
+func init() {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		ortfomk.CoolDown()
+		os.Exit(1)
+	}()
 }
