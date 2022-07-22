@@ -40,6 +40,7 @@ type GlobalData struct {
 		Total      int
 	}
 	Flags              Flags
+	Configuration      Configuration
 	OutputDirectory    string
 	TemplatesDirectory string
 	AdditionalData     map[string]interface{}
@@ -62,7 +63,10 @@ func WarmUp(data *GlobalData) {
 // CoolDown needs to be stop before the program exits.
 // It properly stops the spinner.
 func CoolDown() {
+	LogDebug("cooling down")
 	g.Spinner.Stop()
+	// make the cursor again, since spinner.Stop() doesn't seem to take care of it.
+	fmt.Printf("\033[?25h")
 }
 
 func SetGlobalData(data *GlobalData) {

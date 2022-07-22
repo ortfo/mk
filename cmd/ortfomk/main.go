@@ -75,8 +75,14 @@ func main() {
 		Silent:       isSilent,
 		ProgressFile: progressFilePath,
 	}
+	configPath, _ := args.String("--config")
+	config, err := ortfomk.LoadConfiguration(configPath)
+	if err != nil {
+		ortfomk.LogError("Could not load configuration: %s", err)
+		return
+	}
 	additionalDataFiles, _ := args["--load"].([]string)
-	additionalData, err := ortfomk.LoadAdditionalData(additionalDataFiles)
+	additionalData, err := ortfomk.LoadAdditionalData(append(additionalDataFiles, config.AdditionalData...))
 	if err != nil {
 		ortfomk.LogFatal("couldn't load data files %v: %s", additionalDataFiles, err)
 		return
@@ -88,6 +94,7 @@ func main() {
 		TemplatesDirectory: templatesDirectory,
 		HTTPLinks:          make(map[string][]string),
 		AdditionalData:     additionalData,
+		Configuration:      config,
 	})
 	defer ortfomk.CoolDown()
 
@@ -109,6 +116,7 @@ func main() {
 	//
 	// Loading files
 	//
+
 	db, err := ortfomk.LoadDatabase("database")
 	if err != nil {
 		ortfomk.LogError("Could not load the database: %s", err)
@@ -127,6 +135,10 @@ func main() {
 	// Watch mode
 	//
 	if val, _ := args.Bool("develop"); val {
+		os.Setenv("ENV", "dev")
+
+		go ortfomk.StartDevServer("localhost:8899", "en")
+
 		_, httpLinks, err = ortfomk.BuildAll(templatesDirectory, 0)
 		if err != nil {
 			ortfomk.LogError("During initial build: %s", err)

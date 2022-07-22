@@ -102,16 +102,16 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 	var mediaTemplate string
 
 	if os.Getenv("ENV") == "dev" {
-		assetsTemplate = "/assets/<path>"
-		mediaTemplate = "/dist/media/<path>"
+		assetsTemplate = g.Configuration.Development.OutputTo.Rest
+		mediaTemplate = g.Configuration.Development.OutputTo.Media
 	} else {
-		assetsTemplate = "https://assets.ewen.works/<path>"
-		mediaTemplate = "https://media.ewen.works/<path>"
+		assetsTemplate = g.Configuration.Production.UploadTo.Rest
+		mediaTemplate = g.Configuration.Production.UploadTo.Media
 	}
 
 	prelude := fmt.Sprintf(`
-		const media = path => %q.replace('<path>', path);
-		const asset = path => %q.replace('<path>', path);
+		const media = path => %q + path
+		const asset = path => %q + path
 		const [TRANSLATION_STRING_DELIMITER_OPEN, TRANSLATION_STRING_DELIMITER_CLOSE] = [%q, %q]
 	`, mediaTemplate, assetsTemplate, TranslationStringDelimiterOpen, TranslationStringDelimiterClose)
 

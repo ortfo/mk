@@ -20,6 +20,7 @@ require (
 	github.com/metal3d/go-slugify v0.0.0-20160607203414-7ac2014b2f23
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db
 	github.com/ortfo/db v0.0.0-20220430175239-84e2a21af8b4
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/radovskyb/watcher v1.0.7
 	github.com/relvacode/iso8601 v1.1.0
 	github.com/stoewer/go-strcase v1.2.0
