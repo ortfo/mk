@@ -105,8 +105,8 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 		assetsTemplate = g.Configuration.Development.OutputTo.Rest
 		mediaTemplate = g.Configuration.Development.OutputTo.Media
 	} else {
-		assetsTemplate = g.Configuration.Production.UploadTo.Rest
-		mediaTemplate = g.Configuration.Production.UploadTo.Media
+		assetsTemplate = g.Configuration.Production.AvailableAt.Rest
+		mediaTemplate = g.Configuration.Production.AvailableAt.Media
 	}
 
 	prelude := fmt.Sprintf(`
