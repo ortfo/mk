@@ -15,9 +15,8 @@ import (
 // PreprocessDynamicPathExpression expands some custom syntax added on top of regular antonmedv expressions. Output is a valid antonmedv expression.
 // The expansions are the following:
 //
-//		… is …         ->  1 == 2 ? 1 : ""
-//		… except …     ->  1 != 2 ? 1 : ""
-//
+//	… is …         ->  1 == 2 ? 1 : ""
+//	… except …     ->  1 != 2 ? 1 : ""
 func PreprocessDynamicPathExpression(expression string) string {
 	// Expand "is" assertions syntax
 	if matches := regexp.MustCompile(`^(\w+)\s+is\s+(.+)$`).FindStringSubmatch(expression); matches != nil {

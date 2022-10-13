@@ -25,9 +25,11 @@ function lookupTag(name) {
       .includes(name.toLowerCase())
   )
   if (tag === undefined) {
-    throw Error("No tag found for " + name + ", be sure to add it in tags.yaml.")
+    throw Error(
+      "No tag found for " + name + ", be sure to add it in tags.yaml."
+    )
   }
-  return tag 
+  return tag
 }
 
 function lookupTech(name) {
@@ -37,7 +39,11 @@ function lookupTech(name) {
       .includes(name.toLowerCase())
   )
   if (tech === undefined) {
-    throw Error("No technology found for " + name + ", be sure to add it in technologies.yaml.")
+    throw Error(
+      "No technology found for " +
+        name +
+        ", be sure to add it in technologies.yaml."
+    )
   }
   return tech
 }
@@ -67,11 +73,15 @@ function Summarize(work, maxWords) {
 
 function translate_eager(value, context = "") {
   // TODO ...[minify(value)] so that formatting whitespace differences doesn't prevent accessing the value
-  return _translations[value+context] || value
+  return _translations[value + context] || value
 }
 
 function translate_context(value, context, ...args) {
-  return TRANSLATION_STRING_DELIMITER_OPEN + JSON.stringify({value, args, context}) + TRANSLATION_STRING_DELIMITER_CLOSE
+  return (
+    TRANSLATION_STRING_DELIMITER_OPEN +
+    JSON.stringify({ value, args, context }) +
+    TRANSLATION_STRING_DELIMITER_CLOSE
+  )
 }
 
 function translate(value, ...args) {
@@ -118,13 +128,16 @@ function IsWIP(work) {
 }
 
 function thumbnailKey(workOrLayedOutElement) {
-  const isLayedOutElement =
-    Object.getOwnPropertyNames(workOrLayedOutElement).includes("LayoutIndex")
+  const isLayedOutElement = Object.getOwnPropertyNames(
+    workOrLayedOutElement
+  ).includes("LayoutIndex")
   if (isLayedOutElement) {
     return workOrLayedOutElement.Path
   }
   if (workOrLayedOutElement?.Metadata?.Thumbnail) {
-    return workOrLayedOutElement.Media?.find(m => m.Source === workOrLayedOutElement.Metadata.Thumbnail)?.Path
+    return workOrLayedOutElement.Media?.find(
+      m => m.Source === workOrLayedOutElement.Metadata.Thumbnail
+    )?.Path
   }
   return workOrLayedOutElement.Media?.[0]?.Path
 }
@@ -134,12 +147,16 @@ function ThumbnailSource(work, resolution) {
   if (!key) {
     return ""
   }
-  const availableResolutions = availableResolutionsForThumbnail(work, key)
+  const availableResolutions = Object.keys(
+    work.media.find(m => m.source === key)?.Thumbnails || {}
+  )?.map(parseFloat)
   if (!availableResolutions.length) {
     throw Error(
       `No thumbnails available for ${key}.\nAvailable thumbnails for work ${
-        work.id
-      }: ${Object.keys(work.Metadata.Thumbnails).join(", ")}`
+        work.ID
+      }: ${Object.keys(
+        work.media.filter(m => Object.keys(m?.Thumbnails || {})?.length)
+      ).join(", ")}`
     )
   }
   resolution = closestTo(resolution, ...availableResolutions)

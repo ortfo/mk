@@ -136,12 +136,11 @@ func layoutCellStrings(layout Layout) []string {
 // It adds enough empty paragraphs/media/links to not run out of elements while laying them out.
 // The textual representation of the layout is a string where "; " separates rows and ", " separates columns:
 //
-//		p, l; m; .
+//	p, l; m; .
 //
 // Represents
 //
-//		[][]string{{"p", "l"}, {"m"}, {"."}}
-//
+//	[][]string{{"p", "l"}, {"m"}, {"."}}
 func workWithLayout(layoutString string) WorkOneLang {
 	layout := make([][]string, 0)
 

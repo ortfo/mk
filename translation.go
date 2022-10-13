@@ -97,11 +97,12 @@ type translationString struct {
 // See TranslationStringDelimiterOpen, TranslationStringDelimiterClose. If those two are respectively [ and ],
 // this function replaces
 //
-//		you have [{value: "%d friends", args: [8]}] online
+//	you have [{value: "%d friends", args: [8]}] online
 //
 // with, given that t.GetTranslation("%d friends") returns "%d amis":
 //
-//		you have 8 amis
+//	you have 8 amis
+//
 // TODO: use ICU message syntax instead.
 func (t TranslationsOneLang) TranslateTranslationStrings(content string) string {
 	startsAt := strings.Index(content, TranslationStringDelimiterOpen)

@@ -127,7 +127,7 @@ func (c CollectionOneLang) Contains(work WorkOneLang, works []Work, tags []Tag, 
 		context["technology_"+strings.ReplaceAll(t.URLName, "-", "_")] = isOnW
 	}
 	predicate, err := preprocessContainsPredicate(c.Includes, keys(context))
-	LogDebug("work colleciton predicate preprocessed: %s -> %s", c.Includes, predicate)
+	LogDebug("work collection predicate preprocessed: %s -> %s", c.Includes, predicate)
 	if err != nil {
 		return false, fmt.Errorf("while pre-processing work collection predicate: %w", err)
 	}
