@@ -142,26 +142,28 @@ function thumbnailKey(workOrLayedOutElement) {
   return workOrLayedOutElement.Media?.[0]?.Path
 }
 
-function ThumbnailSource(work, resolution) {
-  const key = thumbnailKey(work)
+function ThumbnailSource(work, resolution, key = null) {
+  if (key === null) {
+    key = thumbnailKey(work)
+  }
   if (!key) {
     return ""
   }
-  const availableResolutions = Object.keys(
-    work.media.find(m => m.source === key)?.Thumbnails || {}
-  )?.map(parseFloat)
+  const availableResolutions = availableResolutionsForThumbnail(work, key)
   if (!availableResolutions.length) {
     throw Error(
       `No thumbnails available for ${key}.\nAvailable thumbnails for work ${
         work.ID
-      }: ${Object.keys(
-        work.media.filter(m => Object.keys(m?.Thumbnails || {})?.length)
-      ).join(", ")}`
+      }: ${work.Media.filter(m => Object.keys(m?.Thumbnails || {})?.length)
+        ?.map(m => m.Path)
+        .join(", ")}`
     )
   }
   resolution = closestTo(resolution, ...availableResolutions)
   if (resolution > 0) {
-    const thumbSource = work.Metadata.Thumbnails?.[key]?.[resolution]
+    const thumbSource = work.Media.find(m => m.Path === key).Thumbnails[
+      resolution
+    ]
     if (thumbSource) {
       return media(thumbSource.replace(/^dist\/media\//, ""))
     }
@@ -174,17 +176,21 @@ function ThumbnailSource(work, resolution) {
 }
 
 function availableResolutionsForThumbnail(work, key) {
-  return Object.keys(work?.Metadata?.Thumbnails?.[key] || {}).map(parseFloat)
+  return Object.keys(
+    work.Media.find(m => m.Path === key)?.Thumbnails || {}
+  )?.map(parseFloat)
 }
 
-function ThumbnailSourcesSet(work) {
-  const key = thumbnailKey(work)
+function ThumbnailSourcesSet(work, key = null) {
+  if (key === null) {
+    key = thumbnailKey(work)
+  }
   if (!key) return ""
 
   let result = []
 
   for (const resolution of availableResolutionsForThumbnail(work, key)) {
-    result.push(`${ThumbnailSource(work, resolution)} ${resolution}w`)
+    result.push(`${ThumbnailSource(work, resolution, key)} ${resolution}w`)
   }
   return result.join(",")
 }
