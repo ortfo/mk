@@ -2,6 +2,7 @@ package ortfomk
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -70,14 +71,15 @@ func Translate(language string, root *html.Node) string {
 			if innerHTML == "" {
 				return
 			}
-			if translated := g.Translations[language].GetTranslation(innerHTML, msgContext); translated != "" {
-				element.SetHtml(translated)
-			} else {
+			translated, err := g.Translations[language].GetTranslation(innerHTML, msgContext)
+			if err != nil {
 				LogDebug("adding missing message %q", innerHTML)
 				g.Translations[language].missingMessages = append(g.Translations[language].missingMessages, po.Message{
 					MsgId:      innerHTML,
 					MsgContext: msgContext,
 				})
+			} else {
+				element.SetHtml(translated)
 			}
 		}
 	})
@@ -122,7 +124,7 @@ func (t TranslationsOneLang) TranslateTranslationStrings(content string) string 
 	}
 
 	LogDebug("translating dynamic message %s", innerJSON)
-	return content[:startsAt] + fmt.Sprintf(t.GetTranslation(translation.Value, translation.Context), translation.Args...) + t.TranslateTranslationStrings(content[endsAt+len(TranslationStringDelimiterClose):])
+	return content[:startsAt] + fmt.Sprintf(t.GetTranslationOrMsgid(translation.Value, translation.Context), translation.Args...) + t.TranslateTranslationStrings(content[endsAt+len(TranslationStringDelimiterClose):])
 }
 
 // LoadTranslations reads from i18n/fr.po to load translations
@@ -200,13 +202,22 @@ func (b ByMsgIdAndCtx) Swap(i, j int) {
 }
 
 // GetTranslation returns the msgstr corresponding to msgid and msgctxt from the .po file
-// If not found, it returns the empty string
-func (t TranslationsOneLang) GetTranslation(msgid string, msgctxt string) string {
+// If not found, it returns an error
+func (t TranslationsOneLang) GetTranslation(msgid string, msgctxt string) (string, error) {
 	t.seenMessages.Add(msgid + msgctxt)
 	for _, message := range t.poFile.Messages {
 		if message.MsgId == msgid && message.MsgStr != "" && message.MsgContext == msgctxt {
-			return message.MsgStr
+			return message.MsgStr, nil
 		}
 	}
-	return ""
+	return "", errors.New(fmt.Sprintf("cannot find msgstr in %s with msgid=%q and msgctx=%q", t.language, msgid, msgctxt))
+}
+
+// GetTranslationOrMsgid is like GetTranslation but it returns the given msgid verbatim instead of returning an error
+func (t TranslationsOneLang) GetTranslationOrMsgid(msgid string, msgctx string) string {
+	translated, err := t.GetTranslation(msgid, msgctx)
+	if err != nil {
+		return msgid
+	}
+	return translated
 }
