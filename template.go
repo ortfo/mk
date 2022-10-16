@@ -110,8 +110,8 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 	}
 
 	prelude := fmt.Sprintf(`
-		const media = path => %q + path
-		const asset = path => %q + path
+		const media = path => (%q +"/"+ path)
+		const asset = path => (%q +"/"+ path)
 		const [TRANSLATION_STRING_DELIMITER_OPEN, TRANSLATION_STRING_DELIMITER_CLOSE] = [%q, %q]
 	`, mediaTemplate, assetsTemplate, TranslationStringDelimiterOpen, TranslationStringDelimiterClose)
 
