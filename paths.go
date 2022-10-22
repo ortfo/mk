@@ -169,12 +169,18 @@ func (h *Hydration) GetDistFilepath(srcFilepath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("couldn't evaluate dynamic path %q: %w", outPath, err)
 	}
-	if strings.HasSuffix(outPath, ".pug") {
-		outPath = strings.TrimSuffix(outPath, ".pug") + ".html"
+	if ExtensionIsSupported(outPath) {
+		outPath = filepathStem(outPath) + ".html"
+	}
+	// Keep URLs clean by removig the .html extension (example.com/thing instead of example.com/thing.html)
+	if strings.HasSuffix(outPath, ".html") && filepathStem(outPath) != "index" {
+		outPath = filepath.Join(filepath.Dir(outPath), filepathStem(outPath), "index.html")
 	}
 	// If it's a future .pdf file, remove .html/.pug to keep .pdf alone
-	if regexp.MustCompile(`\.pdf\.(html|pug)$`).MatchString(outPath) {
-		outPath = strings.TrimSuffix(outPath, ".pug")
+	if ExtensionIsSupported(outPath) && strings.HasSuffix(filepathStem(outPath), ".pdf") {
+		for _, ext := range SupportedExtensions {
+			outPath = strings.TrimSuffix(outPath, ext)
+		}
 		outPath = strings.TrimSuffix(outPath, ".html")
 	}
 	return outPath, nil

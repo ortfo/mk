@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -15,6 +16,9 @@ import (
 
 //go:embed template.js
 var staticTemplateFunctions string
+
+//go:embed eta.min.js
+var etaMinJS string
 
 type workOneLangFrozen struct {
 	WorkOneLang
@@ -97,9 +101,8 @@ type layedOutElementFrozen struct {
 	String string
 }
 
-func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTemplate string) (string, error) {
-	var assetsTemplate string
-	var mediaTemplate string
+func GetJSFilePrelude() string {
+	var assetsTemplate, mediaTemplate string
 
 	if os.Getenv("ENV") == "dev" {
 		assetsTemplate = g.Configuration.Development.OutputTo.Rest
@@ -109,11 +112,14 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 		mediaTemplate = g.Configuration.Production.AvailableAt.Media
 	}
 
-	prelude := fmt.Sprintf(`
+	return fmt.Sprintf(`
 		const media = path => (%q +"/"+ path)
 		const asset = path => (%q +"/"+ path)
 		const [TRANSLATION_STRING_DELIMITER_OPEN, TRANSLATION_STRING_DELIMITER_CLOSE] = [%q, %q]
 	`, mediaTemplate, assetsTemplate, TranslationStringDelimiterOpen, TranslationStringDelimiterClose)
+}
+
+func (hydration *Hydration) DataToInject(templateName string) (map[string]interface{}, error) {
 
 	dataToInject := map[string]interface{}{
 		"all_tags": func() []tagFrozen {
@@ -174,7 +180,7 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 		dataToInject["CurrentWork"] = work.Freeze()
 		layedout, err := work.LayedOut()
 		if err != nil {
-			return "", fmt.Errorf("while laying out %s: %w", hydration.Name(), err)
+			return map[string]interface{}{}, fmt.Errorf("while laying out %s: %w", hydration.Name(), err)
 		}
 
 		frozenLayout := make([]layedOutElementFrozen, len(layedout))
@@ -211,8 +217,42 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 	for key, value := range g.AdditionalData {
 		dataToInject[key] = value
 	}
+	return dataToInject, nil
+}
+
+func GenerateEtaJSFile(hydration *Hydration, templateName string, compiledEtaTemplate string) (string, error) {
+	prelude := GetJSFilePrelude()
+	globalFunctionNames := make([]string, 0)
+
+	for _, match := range regexp.MustCompile(`function (\w+)`).FindAllStringSubmatch(staticTemplateFunctions, -1) {
+		globalFunctionNames = append(globalFunctionNames, match[1])
+	}
+
+	dataToInject, err := hydration.DataToInject(templateName)
+	if err != nil {
+		return "", err
+	}
+
+	dataDeclarations := []string{}
+	for name, value := range dataToInject {
+		// Don't use JSON tags, use the Go struct field names
+		jsoned, err := jsoniter.Config{TagKey: "notjson"}.Froze().MarshalToString(value)
+		if err != nil {
+			return "", fmt.Errorf("while converting %s JSON: %w", name, err)
+		}
+		dataDeclarations = append(dataDeclarations, fmt.Sprintf("const %s = %s;", name, jsoned))
+	}
+	return prelude + etaMinJS + strings.Join(dataDeclarations, "\n") + staticTemplateFunctions + fmt.Sprintf("\n\nEta.renderFile(%q, { %s })", templateName, strings.Join(append(keys(dataToInject), globalFunctionNames...), ", ")), nil
+}
+
+func GeneratePugJSFile(hydration *Hydration, templateName string, compiledPugTemplate string) (string, error) {
+	prelude := GetJSFilePrelude()
 
 	dataDeclarations := make([]string, 0)
+	dataToInject, err := hydration.DataToInject(templateName)
+	if err != nil {
+		return "", err
+	}
 	for name, value := range dataToInject {
 		// Don't use JSON tags, use the Go struct field names
 		jsoned, err := jsoniter.Config{TagKey: "notjson"}.Froze().MarshalToString(value)

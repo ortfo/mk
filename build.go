@@ -15,6 +15,8 @@ import (
 	v8 "rogchap.com/v8go"
 )
 
+var SupportedExtensions = []string{".pug", ".html", ".eta"}
+
 var g *GlobalData = &GlobalData{}
 var DynamicPathExpressionsCache = map[string]*exprVM.Program{}
 
@@ -110,13 +112,22 @@ func ComputeTotalToBuildCount() {
 	g.mu.Unlock()
 }
 
+func ExtensionIsSupported(path string) bool {
+	for _, ext := range SupportedExtensions {
+		if strings.HasSuffix(path, ext) {
+			return true
+		}
+	}
+	return false
+}
+
 func ToBuildTotalCount(in string) (count int) {
 	err := filepath.WalkDir(in, func(path string, entry fs.DirEntry, err error) error {
 		currentDirectory := filepath.Dir(path)
 		if strings.Contains(path, "/mixins/") {
 			return nil
 		}
-		if !(strings.HasSuffix(path, ".pug") || strings.HasSuffix(path, ".html")) {
+		if !ExtensionIsSupported(path) {
 			return nil
 		}
 		if err != nil {
@@ -289,7 +300,7 @@ func ScanAll(in string) (toBuild []string, err error) {
 		if strings.Contains(path, "/mixins/") {
 			return nil
 		}
-		if !(strings.HasSuffix(path, ".pug") || strings.HasSuffix(path, ".html")) {
+		if !ExtensionIsSupported(path) {
 			return nil
 		}
 		if err != nil {

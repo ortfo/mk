@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -122,14 +123,25 @@ func CompileTemplate(templateName string, templateContent []byte) ([]byte, error
 	return command.Output()
 }
 
-// RunTemplate parses a given (HTML) template.
+// RunTemplate parses a given template.
 func RunTemplate(javascriptRuntime *v8.Isolate, hydration *Hydration, templateName string, compiledTemplate []byte) (string, error) {
-	compiledJSFile, err := GenerateJSFile(hydration, templateName, string(compiledTemplate))
+	var compiledJSFile string
+	var err error
+	if strings.HasSuffix(templateName, ".pug") {
+		compiledJSFile, err = GeneratePugJSFile(hydration, templateName, string(compiledTemplate))
+		if err != nil {
+			return "", fmt.Errorf("while generating pug template: %w", err)
+		}
+	} else if strings.HasSuffix(templateName, ".eta") {
+		compiledJSFile, err = GenerateEtaJSFile(hydration, templateName, string(compiledTemplate))
+		if err != nil {
+			return "", fmt.Errorf("while generating eta template: %w", err)
+		}
+	} else {
+		return "", fmt.Errorf("unknown template format %s", filepath.Ext(templateName))
+	}
 	if os.Getenv("DEBUG") == "1" {
 		os.WriteFile(templateName+"."+hydration.Name()+".js", []byte(compiledJSFile), 0644)
-	}
-	if err != nil {
-		return "", fmt.Errorf("while generating template: %w", err)
 	}
 
 	LogDebug("executing template")
