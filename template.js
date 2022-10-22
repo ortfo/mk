@@ -120,6 +120,10 @@ function CreatedAt(work) {
   return unparsed ? new Date(unparsed) : new Date("0000-11-11")
 }
 
+function MostRecentsFirst(works) {
+  return works.sort((a, b) => CreatedAt(a) < CreatedAt(b) ? 1 : -1)
+}
+
 function IsWIP(work) {
   return (
     work.Metadata.WIP ||
