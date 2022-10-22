@@ -126,8 +126,8 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 		"all_technologies": g.Technologies,
 		"all_sites":        g.Sites,
 		"all_works": func() []interface{} {
-			works := make([]interface{}, len(g.Works))
-			for i, work := range g.Works {
+			works := make([]interface{}, len(g.PublicWorks()))
+			for i, work := range g.PublicWorks() {
 				works[i] = work.InLanguage(hydration.language).Freeze()
 			}
 			return works

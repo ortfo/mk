@@ -55,6 +55,7 @@ type WorkMetadata struct {
 	Title          string
 	WIP            bool `json:"wip"`
 	Thumbnails     map[string]map[uint16]string
+	Private        bool
 	Thumbnail      string // Key in Thumbnails for the thumbnail to use to represent this work
 }
 
@@ -225,4 +226,14 @@ func GeneralContentType(media db.Media) string {
 // MarkdownParagraphToHTML returns the HTML equivalent of the given markdown string, without the outer <p>…</p> tag
 func MarkdownParagraphToHTML(markdown string) string {
 	return regexp.MustCompile(`^(?m)<p>(.+)</p>$`).ReplaceAllString(ortfodb.MarkdownToHTML(markdown), "${1}")
+}
+
+// PublicWorks returns Works that are not private
+func (g *GlobalData) PublicWorks() (works []Work) {
+	for _, w := range g.Works {
+		if !w.Metadata.Private {
+			works = append(works, w)
+		}
+	}
+	return
 }
