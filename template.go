@@ -10,7 +10,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/jaytaylor/html2text"
 	jsoniter "github.com/json-iterator/go"
-	ortfodb "github.com/ortfo/db"
 )
 
 //go:embed template.js
@@ -61,49 +60,13 @@ func (c CollectionOneLang) Freeze() collectionOneLangFrozen {
 	}
 }
 
-// layedOutElementFrozen stores a layed out element along with the result of calling
-// some niladic methods such as .Title, .ID, etc. so that they can be marshalled into JSON.
-// This solution is clunky, but works until https://github.com/json-iterator/go/issues/616 is fixed.
-type layedOutElementFrozen struct {
-	Type               string
-	LayoutIndex        int
-	Positions          [][]int
-	GeneralContentType string
-	Metadata           WorkMetadata
-
-	// ortfodb.Media
-	Alt         string
-	Source      string
-	Path        string
-	ContentType string
-	Size        uint64 // In bytes
-	Dimensions  ortfodb.ImageDimensions
-	Duration    uint // In seconds
-	Online      bool // Whether the media is hosted online (referred to by an URL)
-	Attributes  ortfodb.MediaAttributes
-	HasSound    bool // The media is either an audio file or a video file that contains an audio stream
-
-	// ortfodb.Paragraph
-	Content string
-
-	// ortfodb.Link
-	Name string
-	URL  string
-
-	// frozen methods
-	Title  string
-	ID     string
-	CSS    string
-	String string
-}
-
 func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTemplate string) (string, error) {
 	var assetsTemplate string
 	var mediaTemplate string
 
 	if os.Getenv("ENV") == "dev" {
-		assetsTemplate = g.Configuration.Development.OutputTo.Rest
-		mediaTemplate = g.Configuration.Development.OutputTo.Media
+		assetsTemplate = fmt.Sprintf("http://localhost:%d%s", g.DevserverPort, g.Configuration.Development.OutputTo.Rest)
+		mediaTemplate = fmt.Sprintf("http://localhost:%d%s", g.DevserverPort, g.Configuration.Development.OutputTo.Media)
 	} else {
 		assetsTemplate = g.Configuration.Production.AvailableAt.Rest
 		mediaTemplate = g.Configuration.Production.AvailableAt.Media
@@ -172,40 +135,6 @@ func GenerateJSFile(hydration *Hydration, templateName string, compiledPugTempla
 	if hydration.IsWork() {
 		work := hydration.work.InLanguage(hydration.language)
 		dataToInject["CurrentWork"] = work.Freeze()
-		layedout, err := work.LayedOut()
-		if err != nil {
-			return "", fmt.Errorf("while laying out %s: %w", hydration.Name(), err)
-		}
-
-		frozenLayout := make([]layedOutElementFrozen, len(layedout))
-		for i, element := range layedout {
-			frozenLayout[i] = layedOutElementFrozen{
-				Type:               element.Type,
-				LayoutIndex:        element.LayoutIndex,
-				Positions:          element.Positions,
-				GeneralContentType: element.GeneralContentType,
-				Title:              element.Title(),
-				ID:                 element.ID(),
-				CSS:                element.CSS(),
-				String:             element.String(),
-				Alt:                element.Alt,
-				Source:             element.Source,
-				Path:               element.Path,
-				ContentType:        element.ContentType,
-				Size:               element.Size,
-				Dimensions:         element.Dimensions,
-				Duration:           element.Duration,
-				Online:             element.Online,
-				Attributes:         element.Attributes,
-				HasSound:           element.HasSound,
-				Content:            element.Content,
-				Name:               element.Name,
-				URL:                element.URL,
-				Metadata:           hydration.work.Metadata,
-			}
-		}
-
-		dataToInject["CurrentWorkLayedOut"] = frozenLayout
 	}
 
 	for key, value := range g.AdditionalData {
@@ -262,33 +191,35 @@ func (w WorkOneLang) Freeze() workOneLangFrozen {
 }
 
 func (w WorkOneLang) Summary() string {
-	if len(w.Paragraphs) == 0 {
-		return ""
+	for _, block := range w.Blocks {
+		if block.Type == "paragraph" {
+			summary := block.Content.String()
+			html, err := goquery.NewDocumentFromReader(strings.NewReader(summary))
+			if err != nil {
+				LogError("while creating plain text of first paragraph: %s", err)
+				return ""
+			}
+			html.Find("sup.footnote-ref").Each(func(i int, s *goquery.Selection) {
+				s.ReplaceWithHtml(superscriptize(s.Find("a").First().Text()))
+			})
+			summary, err = html.Html()
+			if err != nil {
+				LogError("while creating plain text of first paragraph: %s", err)
+				return ""
+			}
+			summary, err = html2text.FromString(summary, html2text.Options{
+				OmitLinks: true,
+				TextOnly:  true,
+			})
+			if err != nil {
+				LogError("while creating plain text of first paragraph: %s", err)
+				return ""
+			}
+			return summary
+		}
 	}
+	return ""
 
-	summary := w.Paragraphs[0].Content
-	html, err := goquery.NewDocumentFromReader(strings.NewReader(summary))
-	if err != nil {
-		LogError("while creating plain text of first paragraph: %s", err)
-		return ""
-	}
-	html.Find("sup.footnote-ref").Each(func(i int, s *goquery.Selection) {
-		s.ReplaceWithHtml(superscriptize(s.Find("a").First().Text()))
-	})
-	summary, err = html.Html()
-	if err != nil {
-		LogError("while creating plain text of first paragraph: %s", err)
-		return ""
-	}
-	summary, err = html2text.FromString(summary, html2text.Options{
-		OmitLinks: true,
-		TextOnly:  true,
-	})
-	if err != nil {
-		LogError("while creating plain text of first paragraph: %s", err)
-		return ""
-	}
-	return summary
 }
 
 // superscriptize replaces all number characters in given text with their unicode superscript equivalent.

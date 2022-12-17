@@ -44,6 +44,7 @@ type GlobalData struct {
 	OutputDirectory    string
 	TemplatesDirectory string
 	AdditionalData     map[string]interface{}
+	DevserverPort      int
 }
 
 type Flags struct {
@@ -222,7 +223,7 @@ func BuildAll(in string, workersCount int) (built []string, httpLinks map[string
 	var wg sync.WaitGroup
 	wg.Add(workersCount)
 
-	LogDebug("launching 5 parallel build subroutines")
+	LogDebug("launching %d parallel build subroutines", workersCount)
 	for i := 0; i < workersCount; i++ {
 		go func(toBuildChannel chan string) {
 			for {

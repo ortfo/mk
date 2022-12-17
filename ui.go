@@ -51,7 +51,7 @@ func CreateSpinner() Spinner {
 		StopMessage:       colorstring.Color(fmt.Sprintf("Website built to [bold]./%s[reset]", g.OutputDirectory)),
 		StopFailCharacter: "✗",
 		StopFailColors:    []string{"fgRed"},
-		ShowCursor: true, // XXX temporary, as currently the cursors is not shown back when the user Ctrl-Cs
+		ShowCursor:        true, // XXX temporary, as currently the cursors is not shown back when the user Ctrl-Cs
 	})
 
 	if err != nil {

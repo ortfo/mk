@@ -12,7 +12,7 @@ import (
 
 func main() {
 	writeSchema(&ortfodb.Configuration{}, "configuration")
-	writeSchema(&[]ortfodb.Work{}, "database")
+	writeSchema(&[]ortfodb.AnalyzedWork{}, "database")
 }
 
 func writeSchema(typeInstance interface{}, schemaName string) {

@@ -39,8 +39,8 @@ func StartWatcher(db Database) {
 				case watcher.Create:
 					fallthrough
 				case watcher.Write:
-					if strings.HasSuffix(event.Path, ".mo") {
-						LogInfo("Compiled translations changed: re-building everything")
+					if strings.HasSuffix(event.Path, ".po") {
+						LogInfo("Translations changed: re-building everything")
 						translations, err := LoadTranslations()
 						SetTranslationsOnGlobalData(translations)
 						if err != nil {
@@ -48,7 +48,7 @@ func StartWatcher(db Database) {
 						}
 						BuildAll("src", 0)
 					} else if strings.HasSuffix(event.Path, ".pug") {
-						LogInfo("Building file [bold]%s[/bold] and its dependents [bold]%s[/bold]", GetPathRelativeToSrcDir(event.Path), strings.Join(dependents, ", "))
+						LogInfo("Building file %s and its dependents %s", GetPathRelativeToSrcDir(event.Path), strings.Join(dependents, ", "))
 						for _, filePath := range append(dependents, event.Path) {
 							if strings.Contains(filePath, ":work") {
 								BuildWorkPages(filePath)
@@ -87,6 +87,7 @@ func StartWatcher(db Database) {
 			case <-w.Closed:
 				return
 			}
+			Status("Waiting for changes", ProgressDetails{})
 		}
 	}()
 

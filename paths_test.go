@@ -3,16 +3,13 @@ package ortfomk
 import (
 	"testing"
 
-	ortfodb "github.com/ortfo/db"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEvaluateDynamicPath(t *testing.T) {
 	result, err := EvaluateDynamicPath(&Hydration{
 		work: Work{
-			Work: ortfodb.Work{
-				ID: "neptune",
-			},
+			ID: "neptune",
 		},
 		language: "fr",
 	}, "/home/ewen/projects/portfolio/src/:language/:work/player.pug")

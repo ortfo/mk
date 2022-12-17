@@ -76,10 +76,12 @@ func existsOptionalHTMLExtension(filename string) (string, error) {
 	return "", err
 }
 
-func StartDevServer(host string, language string) {
-	LogInfo("Starting development server on http://%s", host)
-	browser.OpenURL("http://" + host)
-	err := http.ListenAndServe(host, http.FileServer(devserver{language: language}))
+func StartDevServer(host string, port int, language string) {
+	g.DevserverPort = port
+	address := fmt.Sprintf("http://%s:%d", host, port)
+	LogInfo("Starting development server on %s", address)
+	browser.OpenURL(address)
+	err := http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), http.FileServer(devserver{language: language}))
 	if err != nil {
 		LogError("while starting development server: %s", err)
 	}

@@ -137,7 +137,7 @@ func main() {
 	if val, _ := args.Bool("develop"); val {
 		os.Setenv("ENV", "dev")
 
-		go ortfomk.StartDevServer("localhost:8899", "en")
+		go ortfomk.StartDevServer("localhost", 8899, "en")
 
 		_, httpLinks, err = ortfomk.BuildAll(templatesDirectory, 0)
 		if err != nil {
